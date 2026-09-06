@@ -33,7 +33,7 @@ public final class WindowsDesktopWindowInfo implements DesktopWindowInfo {
     public Bounds getWorkAreaBounds() {
         var monitor = User32.INSTANCE.MonitorFromPoint(new POINT.ByValue(0, 0), User32.MONITOR_DEFAULTTOPRIMARY);
         MONITORINFO info = new MONITORINFO();
-        if (!User32.INSTANCE.GetMonitorInfo(monitor, info)) {
+        if (!User32.INSTANCE.GetMonitorInfo(monitor, info).booleanValue()) {
             return Bounds.EMPTY;
         }
         Rectangle rectangle = info.rcWork.toRectangle();
