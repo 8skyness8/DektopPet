@@ -27,7 +27,10 @@ class DesktopPetMilestoneConfigurationTest {
         int matches = 0;
         var nodes = document.getElementsByTagNameNS("*", element);
         for (int i = 0; i < nodes.getLength(); i++) {
-            if (name == null || name.equals(nodes.item(i).getAttributes().getNamedItem("Name").getNodeValue())) matches++;
+            var nameAttribute = nodes.item(i).getAttributes().getNamedItem("Name");
+            if (name == null || (nameAttribute != null && name.equals(nameAttribute.getNodeValue()))) {
+                matches++;
+            }
         }
         return matches;
     }
