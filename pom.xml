@@ -44,6 +44,7 @@
         <libDirectory>${project.build.directory}/${libPrefix}</libDirectory>
 
         <slf4j.version>2.0.18</slf4j.version>
+        <junit.version>5.12.2</junit.version>
     </properties>
 
     <repositories>
@@ -54,6 +55,13 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <!-- Java Native Access Platform -->
             <groupId>net.java.dev.jna</groupId>
@@ -153,6 +161,12 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <!-- Run JUnit 5 tests on the module path. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
+            </plugin>
             <plugin>
                 <!-- Generate source-controlled temporary DevPet artwork for the distribution. -->
                 <groupId>org.codehaus.mojo</groupId>
