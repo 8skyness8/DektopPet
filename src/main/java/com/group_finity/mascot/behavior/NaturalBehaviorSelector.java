@@ -8,7 +8,8 @@ import java.util.random.RandomGenerator;
 public final class NaturalBehaviorSelector {
     public record Candidate<T>(T value, String name, int frequency, int cooldown,
                                double energy, double boredom, double curiosity,
-                               double affection, double social, double cursorNear, double companionNear) {}
+                               double affection, double social, double cursorNear, double companionNear,
+                               double relationship) {}
 
     public <T> T select(List<Candidate<T>> input, NaturalBehaviorState state,
                         boolean cursorNear, boolean companionNear, RandomGenerator random) {
@@ -22,7 +23,8 @@ public final class NaturalBehaviorSelector {
             double utility = 1 + need(c.energy(), state, "energy") + need(c.boredom(), state, "boredom")
                     + need(c.curiosity(), state, "curiosity") + need(c.affection(), state, "affection")
                     + need(c.social(), state, "social") + (cursorNear ? c.cursorNear() : 0)
-                    + (companionNear ? c.companionNear() : 0);
+                    + (companionNear ? c.companionNear() : 0)
+                    + c.relationship() * (state.getRelationship() - 50) / 50.0;
             double weight = Math.max(0.01, c.frequency() * Math.max(0.1, utility));
             weight /= 1 + state.recentCount(c.name());
             weights.add(weight);

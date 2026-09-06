@@ -505,13 +505,21 @@ public class Configuration {
         }
 
         if (totalFrequency > 0) {
+            if (!Main.getInstance().getSettings().naturalBehavior) {
+                long random = java.util.concurrent.ThreadLocalRandom.current().nextLong(totalFrequency);
+                for (IBehaviorBuilder candidate : candidates) {
+                    random -= candidate.getFrequency();
+                    if (random < 0) return candidate.buildBehavior();
+                }
+            }
             List<NaturalBehaviorSelector.Candidate<IBehaviorBuilder>> choices = candidates.stream().map(candidate -> {
                 BehaviorBuilder metadata = behaviorBuilders.get(candidate.getName());
                 return new NaturalBehaviorSelector.Candidate<>(candidate, candidate.getName(), candidate.getFrequency(),
                         metadata.getCooldown(), metadata.getUtilityWeight(0), metadata.getUtilityWeight(1),
                         metadata.getUtilityWeight(2), metadata.getUtilityWeight(3), metadata.getUtilityWeight(4),
-                        metadata.getUtilityWeight(5), metadata.getUtilityWeight(6));
+                        metadata.getUtilityWeight(5), metadata.getUtilityWeight(6), metadata.getUtilityWeight(7));
             }).toList();
+            mascot.getNaturalBehaviorState().setRelationship(mascot.getRelationship().getBond());
             IBehaviorBuilder selected = new NaturalBehaviorSelector().select(choices,
                     mascot.getNaturalBehaviorState(), mascot.getNaturalBehaviorState().getTicksSinceInteraction() < 75,
                     mascot.getTotalCount() > 1, java.util.concurrent.ThreadLocalRandom.current());

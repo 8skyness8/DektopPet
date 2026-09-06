@@ -16,6 +16,7 @@ public final class NaturalBehaviorState {
     private final PersonalityState needs = new PersonalityState();
     private long tick;
     private long lastInteractionTick;
+    private int relationship = 50;
 
     public NaturalBehaviorState() {
         for (String need : new String[]{"energy", "boredom", "curiosity", "affection", "social"}) {
@@ -42,6 +43,8 @@ public final class NaturalBehaviorState {
     }
 
     public synchronized void selected(String name, long cooldownTicks) {
+        cooldowns.entrySet().removeIf(entry -> entry.getValue() <= tick);
+        while (cooldowns.size() >= 64) cooldowns.remove(cooldowns.keySet().iterator().next());
         if (history.size() == HISTORY_LIMIT) history.removeFirst();
         history.addLast(name);
         if (cooldownTicks > 0) cooldowns.put(name, tick + cooldownTicks);
@@ -58,4 +61,8 @@ public final class NaturalBehaviorState {
     public synchronized long getTick() { return tick; }
     public synchronized long getTicksSinceInteraction() { return tick - lastInteractionTick; }
     public PersonalityState getNeeds() { return needs; }
+    public synchronized int getRelationship() { return relationship; }
+    public synchronized void setRelationship(int relationship) {
+        this.relationship = Math.max(MIN_NEED, Math.min(MAX_NEED, relationship));
+    }
 }

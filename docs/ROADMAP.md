@@ -203,8 +203,19 @@ future follow-up; no SDK, store API, account, telemetry, or online service was a
   bubble per mascot, per-mascot cooldowns, and a process-wide anti-spam gate. Speech is
   local and optional; DevPet includes a modest original demonstration set.
 
-### 6. [ ] User relationship and interaction memory
+### 6. [x] User relationship and interaction memory
 
-### 7. [ ] Rich multi-pet social behavior
+- Keep a bounded bond per image-set identity in atomic local properties persistence. Generic
+  affection, drag, and throw events use per-event cooldowns, and optional behavior metadata
+  can use the relationship without character-specific Java rules.
+
+### 7. [x] Rich multi-pet social behavior
+
+- Coordinate exclusive, deterministic nearest-pet sessions through bounded notice, approach,
+  greeting, together, completion/cancellation, and pair-cooldown state. Discovery is rate
+  limited in the manager loop and optional character actions remain configuration-owned.
 
 ### 8. [ ] Natural-behavior tuning, performance, and release stabilization
+
+- Implementation complete; mandatory Windows 10/11 runtime and packaged-distribution
+  verification remains pending before this milestone can be checked.

@@ -13,6 +13,9 @@ import com.group_finity.mascot.environment.Area;
 import com.group_finity.mascot.environment.MascotEnvironment;
 import com.group_finity.mascot.image.MascotImage;
 import com.group_finity.mascot.menu.MenuScroller;
+import com.group_finity.mascot.relationship.InteractionEvent;
+import com.group_finity.mascot.relationship.RelationshipRegistry;
+import com.group_finity.mascot.relationship.RelationshipState;
 import com.group_finity.mascot.platform.NativeFactory;
 import com.group_finity.mascot.platform.TranslucentWindow;
 import com.group_finity.mascot.sound.Sounds;
@@ -56,6 +59,8 @@ public class Mascot {
      * This is incremented whenever a {@code Mascot} is instantiated.
      */
     private static final AtomicInteger lastId = new AtomicInteger();
+    private static final RelationshipRegistry relationships = new RelationshipRegistry(
+            Main.CONFIG_DIRECTORY.resolve("relationships.properties"));
 
     /**
      * The unique ID of this {@code Mascot}.
@@ -294,6 +299,13 @@ public class Mascot {
     /** Script-friendly access to the five bounded V2 needs. */
     public PersonalityState getNeeds() { return naturalBehaviorState.getNeeds(); }
 
+    /** Script-friendly long-term relationship shared by every instance of this image set. */
+    public RelationshipState getRelationship() { return relationships.relationship(imageSet); }
+
+    public void recordInteraction(InteractionEvent event) {
+        relationships.record(imageSet, event);
+    }
+
     /**
      * Creates a new {@code Mascot} with the specified image set.
      *
@@ -452,7 +464,6 @@ public class Mascot {
      * @see MouseListener#mousePressed(MouseEvent)
      */
     private void mousePressed(final MouseEvent event) {
-        naturalBehaviorState.interaction(2);
         // Check for popup triggers in both mousePressed and mouseReleased
         // because popup menus are triggered differently on different systems
         if (event.isPopupTrigger()) {
@@ -746,6 +757,13 @@ public class Mascot {
     }
 
     public boolean hasPresentationBubble() { return presentationBubbleTicks > 0; }
+
+    /** Ends transient speech when a coordinated behavior is cancelled. */
+    public void clearPresentationBubble() {
+        presentationBubble = null;
+        presentationBubbleTicks = 0;
+        needsRepaint = true;
+    }
 
     /** Stable creation-order identifier used only for deterministic coordination. */
     public int getId() {
@@ -1330,6 +1348,11 @@ public class Mascot {
      * @see #isDragging()
      */
     public void setDragging(final boolean dragging) {
+        if (dragging && !this.dragging) {
+            naturalBehaviorState.interaction(0);
+            recordInteraction(InteractionEvent.DRAG);
+            if (manager != null) manager.cancelSocial(this);
+        }
         this.dragging = dragging;
     }
 

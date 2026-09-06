@@ -911,6 +911,7 @@
         <attribute name="SocialWeight" type="double" default="0"/>
         <attribute name="CursorNearWeight" type="double" default="0"/>
         <attribute name="CompanionNearWeight" type="double" default="0"/>
+        <attribute name="RelationshipWeight" type="double" default="0"/>
     </complexType>
 
     <complexType name="BehaviorCondition">

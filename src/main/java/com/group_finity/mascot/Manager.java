@@ -1,6 +1,8 @@
 package com.group_finity.mascot;
 
 import com.group_finity.mascot.behavior.BehaviorExecutionException;
+import com.group_finity.mascot.behavior.NaturalBehaviorState;
+import com.group_finity.mascot.behavior.UserBehavior;
 import com.group_finity.mascot.config.BehaviorInstantiationException;
 import com.group_finity.mascot.config.Configuration;
 import com.group_finity.mascot.platform.NativeFactory;
@@ -41,6 +43,8 @@ public class Manager {
      * A list of {@link Mascot Mascots} that are managed by this {@code Manager}.
      */
     private final List<Mascot> mascots = new ArrayList<>();
+    private final InteractionCoordinator<Mascot> social = new InteractionCoordinator<>(30, 750);
+    private long socialTick;
 
     /**
      * The {@link Mascot} objects that should be added to this {@code Manager}.
@@ -224,6 +228,7 @@ public class Manager {
             noMascots = mascots.isEmpty();
 
             if (!noMascots) {
+                updateSocialEncounters();
                 // Advance the mascots' time
                 for (final Mascot mascot : mascots) {
                     mascot.tick();
@@ -242,6 +247,63 @@ public class Manager {
             // exitOnLastRemoved is true and there are no mascots left, so exit.
             Main.getInstance().exit();
         }
+    }
+
+    /** Cancels both sides of an encounter without delaying required drag/fall/throw behavior. */
+    public void cancelSocial(Mascot mascot) {
+        social.cancel(mascot, socialTick);
+        mascot.clearPresentationBubble();
+    }
+
+    private void updateSocialEncounters() {
+        socialTick++;
+        Set<Mascot> previouslyClaimed = new HashSet<>();
+        for (Mascot mascot : mascots) if (social.isClaimed(mascot)) previouslyClaimed.add(mascot);
+        List<InteractionCoordinator.Session<Mascot>> completed = social.advance(socialTick,
+                mascot -> mascot.getManager() == this,
+                mascot -> mascot.isDragging() || isSafetyBehavior(mascot));
+        for (InteractionCoordinator.Session<Mascot> session : completed) {
+            session.first().getNeeds().increment("social", -25, NaturalBehaviorState.MAX_NEED);
+            session.second().getNeeds().increment("social", -25, NaturalBehaviorState.MAX_NEED);
+        }
+        for (Mascot mascot : previouslyClaimed) if (!social.isClaimed(mascot)) mascot.clearPresentationBubble();
+        // Discovery is bounded to twice per five seconds, rather than every animation tick.
+        if (!Main.getInstance().getSettings().naturalBehavior || mascots.size() < 2 || socialTick % 125 != 0) return;
+        for (Mascot requester : mascots) {
+            if (requester.getNeeds().get("social") < 60 || social.isClaimed(requester)) continue;
+            Optional<InteractionCoordinator.Session<Mascot>> started = social.start(requester, mascots,
+                    Mascot::getAnchor, Mascot::getId,
+                    mascot -> mascot.getManager() == this && !mascot.isDragging() && !isSafetyBehavior(mascot), socialTick);
+            if (started.isPresent()) {
+                Mascot partner = started.get().second();
+                Configuration configuration = Main.getInstance().getConfiguration(requester.getImageSet());
+                Configuration partnerConfiguration = Main.getInstance().getConfiguration(partner.getImageSet());
+                if (configuration.getBehaviorNames().contains("OfferGreeting")
+                        && configuration.isBehaviorEnabled("OfferGreeting", requester)
+                        && partnerConfiguration.getBehaviorNames().contains("AnswerGreeting")
+                        && partnerConfiguration.isBehaviorEnabled("AnswerGreeting", partner)) {
+                    try {
+                        requester.setBehavior(configuration.buildBehavior("OfferGreeting", requester));
+                        partner.setBehavior(partnerConfiguration.buildBehavior("AnswerGreeting", partner));
+                    }
+                    catch (BehaviorInstantiationException | BehaviorExecutionException error) {
+                        log.warn("Unable to start configured social encounter for {}", requester, error);
+                        cancelSocial(requester);
+                    }
+                } else {
+                    // Optional metadata/actions are absent: legacy characters remain entirely unchanged.
+                    cancelSocial(requester);
+                }
+            }
+        }
+    }
+
+    private static boolean isSafetyBehavior(Mascot mascot) {
+        if (mascot.getBehavior() instanceof com.group_finity.mascot.behavior.UserBehavior behavior) {
+            return Set.of(UserBehavior.BEHAVIORNAME_DRAGGED, UserBehavior.BEHAVIORNAME_THROWN,
+                    UserBehavior.BEHAVIORNAME_FALL).contains(behavior.getName());
+        }
+        return false;
     }
 
     /**

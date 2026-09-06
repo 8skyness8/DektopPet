@@ -35,6 +35,8 @@ public class Settings {
     public boolean throwing = true;
     public boolean sounds = true;
     public boolean presentationBubbles = true;
+    /** Master compatibility switch for optional V2 utility, relationship, and social selection. */
+    public boolean naturalBehavior = true;
     public boolean multiscreen = true;
 
     public boolean showTrayIcon = true;
@@ -94,6 +96,7 @@ public class Settings {
         throwing = getBooleanProperty(properties, "Throwing", true);
         sounds = getBooleanProperty(properties, "Sounds", true);
         presentationBubbles = getBooleanProperty(properties, "PresentationBubbles", true);
+        naturalBehavior = getBooleanProperty(properties, "NaturalBehavior", true);
         multiscreen = getBooleanProperty(properties, "Multiscreen", true);
 
         // General settings
@@ -222,6 +225,7 @@ public class Settings {
         properties.setProperty("Throwing", String.valueOf(throwing));
         properties.setProperty("Sounds", String.valueOf(sounds));
         properties.setProperty("PresentationBubbles", String.valueOf(presentationBubbles));
+        properties.setProperty("NaturalBehavior", String.valueOf(naturalBehavior));
         properties.setProperty("Multiscreen", String.valueOf(multiscreen));
 
         // General settings

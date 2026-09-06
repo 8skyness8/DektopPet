@@ -62,6 +62,8 @@ class DesktopPetMilestoneConfigurationTest {
         // reaching into Configuration's package-private implementation details.
         assertEquals("300", namedAttribute(behaviors, "Behavior", "CuriousObservation", "Cooldown"));
         assertEquals("0.8", namedAttribute(behaviors, "Behavior", "CuriousObservation", "BoredomWeight"));
+        assertEquals("0.25", namedAttribute(behaviors, "Behavior", "OfferGreeting", "RelationshipWeight"));
+        assertEquals("0.15", namedAttribute(behaviors, "Behavior", "IdleThought", "RelationshipWeight"));
 
         assertEquals(1, named(actions, "Action", "ClimbWindowSide"));
         assertEquals(1, named(actions, "Action", "HangFromWindowBottom"));

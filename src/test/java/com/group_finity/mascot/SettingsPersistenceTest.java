@@ -16,13 +16,16 @@ class SettingsPersistenceTest {
         Settings defaults = new Settings();
         defaults.load(settingsFile);
         assertTrue(defaults.presentationBubbles);
+        assertTrue(defaults.naturalBehavior);
 
         defaults.presentationBubbles = true;
+        defaults.naturalBehavior = false;
         defaults.sounds = false;
         defaults.save(settingsFile);
         Settings reloaded = new Settings();
         reloaded.load(settingsFile);
         assertTrue(reloaded.presentationBubbles);
+        assertFalse(reloaded.naturalBehavior);
         assertFalse(reloaded.sounds);
         assertFalse(Files.exists(settingsFile.resolveSibling("settings.properties.tmp")));
     }
