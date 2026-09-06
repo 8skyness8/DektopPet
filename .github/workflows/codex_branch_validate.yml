@@ -1,0 +1,56 @@
+name: Validate Codex branches
+
+on:
+  push:
+    branches:
+      - 'codex/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-branch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out exact pushed commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set up Temurin JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build and test with Maven
+        run: mvn --batch-mode clean verify
+
+      - name: Verify packaging outputs
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content pom.xml)).project.version
+          $outputs = @(
+            "target/DesktopPet.jar"
+            "target/DesktopPet.exe"
+            "target/DesktopPet_$version.zip"
+          )
+
+          foreach ($output in $outputs) {
+            if (-not (Test-Path -Path $output -PathType Leaf)) {
+              throw "Required packaging output not found: $output"
+            }
+          }
+
+      - name: Upload Windows distribution
+        uses: actions/upload-artifact@v6
+        with:
+          name: DesktopPet-Codex-${{ github.sha }}
+          path: target/DesktopPet_*.zip
+          if-no-files-found: error

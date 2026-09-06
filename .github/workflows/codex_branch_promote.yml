@@ -1,0 +1,134 @@
+name: Promote validated Codex branches
+
+on:
+  workflow_run:
+    workflows: ["Validate Codex branches"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create or update PR and merge only eligible validated commits
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          VALIDATED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$HEAD_BRANCH" != codex/* ]]; then
+            echo "Validated branch is not codex/*; refusing promotion."
+            exit 0
+          fi
+
+          current_branch_sha="$(gh api "/repos/$REPOSITORY/git/ref/heads/$HEAD_BRANCH" --jq '.object.sha')"
+          if [[ "$current_branch_sha" != "$VALIDATED_HEAD_SHA" ]]; then
+            echo "Branch moved after validation; waiting for validation of the new head."
+            exit 0
+          fi
+
+          commit_message="$(gh api "/repos/$REPOSITORY/commits/$VALIDATED_HEAD_SHA" --jq '.commit.message')"
+          marker="$(printf '%s\n' "$commit_message" | grep -E '^Automation: (auto-merge|manual-review)$' | tail -n 1 || true)"
+          if [[ -z "$marker" ]]; then
+            marker='Automation: manual-review'
+          fi
+
+          # A codex branch may change ordinary code, but it must not be able to weaken
+          # the validator that grants promotion. If the validator differs from main,
+          # force human review even though the read-only validation run succeeded.
+          main_validator_sha="$(gh api "/repos/$REPOSITORY/contents/.github/workflows/codex_branch_validate.yml?ref=main" --jq '.sha')"
+          head_validator_sha="$(gh api "/repos/$REPOSITORY/contents/.github/workflows/codex_branch_validate.yml?ref=$VALIDATED_HEAD_SHA" --jq '.sha' 2>/dev/null || true)"
+          if [[ -z "$head_validator_sha" || "$head_validator_sha" != "$main_validator_sha" ]]; then
+            echo "Validator workflow changed on the Codex branch; forcing manual review."
+            marker='Automation: manual-review'
+          fi
+
+          changed_files="$(gh api "/repos/$REPOSITORY/compare/main...$VALIDATED_HEAD_SHA" --jq '.files[].filename')"
+          if printf '%s\n' "$changed_files" | grep -q '^.github/workflows/'; then
+            echo "Workflow files changed; forcing manual review."
+            marker='Automation: manual-review'
+          fi
+
+          pr_number="$(gh pr list --repo "$REPOSITORY" --head "$HEAD_BRANCH" --base main --state open --json number --jq '.[0].number // empty')"
+
+          if [[ -z "$pr_number" ]]; then
+            title="$(printf '%s\n' "$commit_message" | sed -n '1p')"
+            if [[ -z "$title" ]]; then
+              title="Codex changes from $HEAD_BRANCH"
+            fi
+
+            body_file="$(mktemp)"
+            cat >"$body_file" <<EOF
+          ### Automated Codex handoff
+
+          This pull request was created automatically after the exact branch commit passed the read-only Windows Codex branch validation workflow.
+
+          - Branch: \`$HEAD_BRANCH\`
+          - Validated commit: \`$VALIDATED_HEAD_SHA\`
+          - Validation: \`mvn --batch-mode clean verify\` plus packaging-output checks on \`windows-latest\`
+
+          $marker
+
+          If this pull request is marked \`Automation: manual-review\`, inspect and merge it manually after any required Windows smoke check. If it is marked \`Automation: auto-merge\`, the promotion workflow may merge only this exact validated commit.
+          EOF
+
+            gh pr create \
+              --repo "$REPOSITORY" \
+              --base main \
+              --head "$HEAD_BRANCH" \
+              --title "$title" \
+              --body-file "$body_file"
+
+            pr_number="$(gh pr list --repo "$REPOSITORY" --head "$HEAD_BRANCH" --base main --state open --json number --jq '.[0].number // empty')"
+          fi
+
+          if [[ -z "$pr_number" ]]; then
+            echo "Could not resolve an open pull request for $HEAD_BRANCH."
+            exit 1
+          fi
+
+          pr="$(gh api "/repos/$REPOSITORY/pulls/$pr_number")"
+          pr_body="$(jq -r '.body // ""' <<<"$pr")"
+          draft="$(jq -r '.draft' <<<"$pr")"
+          current_pr_sha="$(jq -r '.head.sha' <<<"$pr")"
+          head_repo="$(jq -r '.head.repo.full_name // ""' <<<"$pr")"
+
+          if grep -Fxq 'Automation: manual-review' <<<"$pr_body"; then
+            marker='Automation: manual-review'
+          fi
+
+          if gh api "/repos/$REPOSITORY/issues/$pr_number" --jq '.labels[].name' | grep -Fxq 'manual-review'; then
+            marker='Automation: manual-review'
+          fi
+
+          if [[ "$head_repo" != "$REPOSITORY" || "$draft" == "true" ]]; then
+            marker='Automation: manual-review'
+          fi
+
+          if [[ "$current_pr_sha" != "$VALIDATED_HEAD_SHA" ]]; then
+            echo "PR head changed after validation; leaving it unmerged."
+            exit 0
+          fi
+
+          if [[ "$marker" != 'Automation: auto-merge' ]]; then
+            echo "PR #$pr_number is ready for manual review after successful Windows validation."
+            exit 0
+          fi
+
+          echo "Merging PR #$pr_number at exact validated commit $VALIDATED_HEAD_SHA."
+          gh api \
+            --method PUT \
+            "/repos/$REPOSITORY/pulls/$pr_number/merge" \
+            -f merge_method=squash \
+            -f sha="$VALIDATED_HEAD_SHA"
