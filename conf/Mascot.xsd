@@ -495,6 +495,9 @@
         <attribute name="Text" type="tns:ScriptableString" default="">
             <annotation><documentation>Short text displayed by the optional Say presentation action.</documentation></annotation>
         </attribute>
+        <attribute name="Phrases" type="tns:ScriptableString" default="">
+            <annotation><documentation>Pipe-separated, configuration-owned phrase pool used by Say.</documentation></annotation>
+        </attribute>
 
         <!--
         This is technically not part of the schema.
@@ -900,6 +903,14 @@
                 </documentation>
             </annotation>
         </attribute>
+        <attribute name="Cooldown" type="nonNegativeInteger" default="0"/>
+        <attribute name="EnergyWeight" type="double" default="0"/>
+        <attribute name="BoredomWeight" type="double" default="0"/>
+        <attribute name="CuriosityWeight" type="double" default="0"/>
+        <attribute name="AffectionWeight" type="double" default="0"/>
+        <attribute name="SocialWeight" type="double" default="0"/>
+        <attribute name="CursorNearWeight" type="double" default="0"/>
+        <attribute name="CompanionNearWeight" type="double" default="0"/>
     </complexType>
 
     <complexType name="BehaviorCondition">

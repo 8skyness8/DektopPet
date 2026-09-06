@@ -11,11 +11,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class SettingsPersistenceTest {
     @TempDir Path temporaryDirectory;
 
-    @Test void newPresentationSettingIsOptInAndRoundTripsAtomically() throws Exception {
+    @Test void newPresentationSettingDefaultsOnAndExplicitChoiceRoundTripsAtomically() throws Exception {
         Path settingsFile = temporaryDirectory.resolve("nested/settings.properties");
         Settings defaults = new Settings();
         defaults.load(settingsFile);
-        assertFalse(defaults.presentationBubbles);
+        assertTrue(defaults.presentationBubbles);
 
         defaults.presentationBubbles = true;
         defaults.sounds = false;
@@ -33,7 +33,7 @@ class SettingsPersistenceTest {
         Settings settings = new Settings();
         settings.load(file);
         assertTrue(settings.presentationBubbles);
-        Files.writeString(file, "Sounds=true\n");
+        Files.writeString(file, "Sounds=true\nPresentationBubbles=false\n");
         settings.load(file);
         assertFalse(settings.presentationBubbles);
     }

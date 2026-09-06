@@ -34,7 +34,7 @@ public class Settings {
     public boolean transformation = true;
     public boolean throwing = true;
     public boolean sounds = true;
-    public boolean presentationBubbles = false;
+    public boolean presentationBubbles = true;
     public boolean multiscreen = true;
 
     public boolean showTrayIcon = true;
@@ -93,7 +93,7 @@ public class Settings {
         transformation = getBooleanProperty(properties, "Transformation", true);
         throwing = getBooleanProperty(properties, "Throwing", true);
         sounds = getBooleanProperty(properties, "Sounds", true);
-        presentationBubbles = getBooleanProperty(properties, "PresentationBubbles", false);
+        presentationBubbles = getBooleanProperty(properties, "PresentationBubbles", true);
         multiscreen = getBooleanProperty(properties, "Multiscreen", true);
 
         // General settings

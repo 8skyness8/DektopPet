@@ -53,6 +53,8 @@ public class BehaviorBuilder implements IBehaviorBuilder {
      * @see #getFrequency()
      */
     private final int frequency;
+    private final int cooldown;
+    private final double[] utilityWeights = new double[7];
 
     /**
      * The conditions for this {@code BehaviorBuilder}.
@@ -137,6 +139,12 @@ public class BehaviorBuilder implements IBehaviorBuilder {
         }
         // TODO: Ensure that frequencies are not negative when loading behaviors and behavior references
         frequency = Integer.parseInt(frequencyText);
+        cooldown = integerAttribute(behaviorNode, schema, "Cooldown", 0);
+        String[] utilityNames = {"EnergyWeight", "BoredomWeight", "CuriosityWeight", "AffectionWeight",
+                "SocialWeight", "CursorNearWeight", "CompanionNearWeight"};
+        for (int i = 0; i < utilityNames.length; i++) {
+            utilityWeights[i] = doubleAttribute(behaviorNode, schema, utilityNames[i], 0);
+        }
         hidden = behaviorNode.hasAttribute(schema.getString("Hidden")) &&
                 Boolean.parseBoolean(behaviorNode.getAttribute(schema.getString("Hidden")));
 
@@ -185,6 +193,9 @@ public class BehaviorBuilder implements IBehaviorBuilder {
         tempParams.remove(schema.getString("Hidden"));
         tempParams.remove(schema.getString("Condition"));
         tempParams.remove(schema.getString("Toggleable"));
+        tempParams.remove(schema.getString("Cooldown"));
+        for (String key : new String[]{"EnergyWeight", "BoredomWeight", "CuriosityWeight", "AffectionWeight",
+                "SocialWeight", "CursorNearWeight", "CompanionNearWeight"}) tempParams.remove(schema.getString(key));
         if (tempParams.isEmpty()) {
             // Use the same one empty map instance to save memory
             params = Map.of();
@@ -233,6 +244,17 @@ public class BehaviorBuilder implements IBehaviorBuilder {
             log.debug("Finished loading behavior: {}", this);
         }
     }
+
+    private static int integerAttribute(Entry node, ResourceBundle schema, String key, int fallback) {
+        return node.hasAttribute(schema.getString(key)) ? Integer.parseInt(node.getAttribute(schema.getString(key))) : fallback;
+    }
+
+    private static double doubleAttribute(Entry node, ResourceBundle schema, String key, double fallback) {
+        return node.hasAttribute(schema.getString(key)) ? Double.parseDouble(node.getAttribute(schema.getString(key))) : fallback;
+    }
+
+    public int getCooldown() { return cooldown; }
+    public double getUtilityWeight(int index) { return utilityWeights[index]; }
 
     @Override
     public String toString() {

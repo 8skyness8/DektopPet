@@ -58,11 +58,18 @@ class DesktopPetMilestoneConfigurationTest {
         configuration.load(new Entry(behaviors.getDocumentElement()), "DevPet");
         configuration.validate();
 
+        BehaviorBuilder curious = configuration.getBehaviorBuilders().get("CuriousObservation");
+        assertEquals(300, curious.getCooldown());
+        assertEquals(0.8, curious.getUtilityWeight(1));
+
         assertEquals(1, named(actions, "Action", "ClimbWindowSide"));
         assertEquals(1, named(actions, "Action", "HangFromWindowBottom"));
         assertEquals(1, named(actions, "Action", "IncreaseCuriosity"));
         assertEquals(1, named(actions, "Action", "PetResponse"));
-        assertEquals(1, named(actions, "Action", "SayThanks"));
+        assertEquals(1, named(actions, "Action", "SayPetting"));
+        assertEquals(1, named(actions, "Action", "SayCurious"));
+        assertEquals(1, named(actions, "Action", "SayIdle"));
+        assertEquals(1, named(actions, "Action", "SayGreeting"));
         assertEquals(1, named(actions, "Action", "OfferGreeting"));
         assertEquals(1, named(actions, "Action", "AnswerGreeting"));
         assertEquals(1, named(actions, "Hotspot", null));
@@ -72,6 +79,7 @@ class DesktopPetMilestoneConfigurationTest {
         assertEquals(1, named(behaviors, "Behavior", "HangFromWindowBottom"));
         assertEquals(1, named(behaviors, "Behavior", "OfferGreeting"));
         assertEquals(1, named(behaviors, "Behavior", "AnswerGreeting"));
+        assertEquals(1, named(behaviors, "Behavior", "IdleThought"));
     }
 
     private static int named(org.w3c.dom.Document document, String element, String name) {

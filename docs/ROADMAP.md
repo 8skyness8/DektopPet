@@ -138,8 +138,8 @@ Manual input and animation checks are listed in the Windows smoke-test document.
   uses original or compatibly licensed content, and does not obstruct desktop use.
 
 The generic `Say` action displays short configuration-owned text inside the existing pet
-window. It is opt-in through `PresentationBubbles=false`, creates no additional input
-surface, and the DevPet petting response uses the original text “Thanks!”.
+window. It is controlled by `PresentationBubbles`, creates no additional input surface, and
+V2 expands the original single petting phrase into configuration-owned phrase pools.
 
 ### 10. [x] Multiple-pet interactions
 
@@ -158,7 +158,7 @@ tie-breaker; weak target references and per-tick validation safely handle remova
 
 Settings saves now use a same-directory temporary file and atomic replacement when the
 filesystem supports it, create missing parent directories, and discard stale properties
-on reload. Existing defaults are unchanged and the new presentation option defaults off.
+on reload. Explicit saved presentation choices are preserved; V2 changes only the new-install default to on.
 
 ### 12. [x] Packaging, productization, and eventual Steam integration
 
@@ -169,3 +169,42 @@ on reload. Existing defaults are unchanged and the new presentation option defau
 The existing ZIP distribution now includes a working-directory-safe Windows launcher and
 the release smoke-test guide. Steam integration remains a credentials-free documented
 future follow-up; no SDK, store API, account, telemetry, or online service was added.
+
+## DesktopPet V2 — Natural Behavior
+
+### 1. [x] Behavior memory and repetition suppression
+
+- Keep bounded per-mascot history, suppress immediate optional repeats, apply expiring
+  configuration cooldowns, retain weighted variation, and fall back safely when every
+  eligible choice is suppressed. Forced safety behaviors remain on their direct paths.
+
+### 2. [x] Dynamic needs and mood
+
+- Provide bounded per-mascot energy, boredom, curiosity, affection, and social needs.
+  Advance them gradually, expose them as `mascot.needs` to scripts, and respond to user
+  interaction without character-specific engine policy.
+
+### 3. [x] Context-aware behavior selection
+
+- Layer generic need, recent interaction/cursor, companion, cooldown, and memory utility
+  adjustments over existing Shimeji `Frequency` values. V2 metadata is optional, and the
+  legacy eligible candidate set and falling fallback remain authoritative.
+
+### 4. [x] Natural action transitions
+
+- Continue using existing Stand, Look, `MoveWithTurn`, falling, landing, border, and
+  configuration sequences. DevPet observation and petting sequences settle through
+  existing poses/Stand; movement actions already turn toward their configured target.
+  Exact manual checks are in `NATURAL_BEHAVIOR_SMOKE_TEST.md`.
+
+### 5. [x] Contextual speech / presentation system
+
+- Add the Settings speech-bubble choice, configuration-owned phrase pools, one active
+  bubble per mascot, per-mascot cooldowns, and a process-wide anti-spam gate. Speech is
+  local and optional; DevPet includes a modest original demonstration set.
+
+### 6. [ ] User relationship and interaction memory
+
+### 7. [ ] Rich multi-pet social behavior
+
+### 8. [ ] Natural-behavior tuning, performance, and release stabilization
