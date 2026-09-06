@@ -770,7 +770,7 @@
                     <Font bold="true" component="lblShimejiEE" property="font" relativeSize="true" size="10"/>
                   </FontInfo>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Shimeji-ee"/>
+                <Property name="text" type="java.lang.String" value="DesktopPet"/>
                 <Property name="alignmentX" type="float" value="0.5"/>
               </Properties>
             </Component>

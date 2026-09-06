@@ -1,6 +1,6 @@
-# Fork notes
+# DesktopPet
 
-This is a fork of [Kilkakon's fork](https://kilkakon.com/shimeji/) of
+DesktopPet is a fork of [Kilkakon's fork](https://kilkakon.com/shimeji/) of
 [Shimeji-ee](https://code.google.com/archive/p/shimeji-ee/) that updates the runtime from JRE 6 to JDK 25.
 It also contains:
 
@@ -61,9 +61,9 @@ Shimeji by Kilkakon and other members of the community.
 
 ## How to Start
 
-1. Open the Shimeji-ee JAR file (`Shimeji-ee.jar`).
-    * On Windows, you can alternatively open `Shimeji-ee.exe`.
-    * On macOS/Linux, you can alternatively open `Shimeji-ee`.
+1. Open the DesktopPet JAR file (`DesktopPet.jar`).
+    * On Windows, you can alternatively open `DesktopPet.exe`.
+    * On macOS/Linux, you can alternatively open `DesktopPet`.
 2. Right-click the tray icon for general options.
 3. Right-click a Shimeji for options relating to it.
 
@@ -84,13 +84,13 @@ For example, if you want to add, say, a new Batman Shimeji:
 2. You must have an image set that mimics the contents of `img/Shimeji`. Create and put new versions of `shime1.png` -
    `shime46.png` (with Batman images, of course) in the `img/Batman` folder. The filenames must be the same as the
    `img/Shimeji` files. Refer to `img/Shimeji` for the proper character positions.
-3. Start Shimeji-ee. Now Shimeji and Batman will drop. Right-click Batman to perform Batman specific options. Pressing
+3. Start DesktopPet. Now Shimeji and Batman will drop. Right-click Batman to perform Batman specific options. Pressing
    "Call Shimeji" in the tray icon menu will randomly create and add either Shimeji or Batman.
 
-When Shimeji-ee starts, one Shimeji for every image set in the `img` folder will be created. If you have too many image
+When DesktopPet starts, one Shimeji for every image set in the `img` folder will be created. If you have too many image
 sets, a lot of your computer's memory will be used... so be careful.
 
-Shimeji-ee will ignore all the image sets that are in the `img/unused` folder, so you can hide image sets in there.
+DesktopPet will ignore all the image sets that are in the `img/unused` folder, so you can hide image sets in there.
 There is also a tool, Image Set Chooser, that will let you select image sets at run time. It remembers previous options
 via the `conf/settings.properties` file. Don't choose too many at once.
 
@@ -121,10 +121,10 @@ Each type of Shimeji is configured through:
 3. A behaviors file. Unless `img/[NAME]/conf/behaviors.xml` or `conf/[NAME]/behaviors.xml` exists, `conf/behaviors.xml`
    will be used.
 
-When Shimeji-ee starts, one Shimeji for every image set in the `img` folder will be created. If you have too many image
+When DesktopPet starts, one Shimeji for every image set in the `img` folder will be created. If you have too many image
 sets, a lot of your computer's memory will be used... so be careful.
 
-Shimeji-ee will ignore all the image sets that are in the `img/unused` folder, so you can hide image sets in there.
+DesktopPet will ignore all the image sets that are in the `img/unused` folder, so you can hide image sets in there.
 There is also a tool, Image Set Chooser, that will let you select image sets at run time. It remembers previous options
 via the `conf/settings.properties` file. Don't choose too many at once.
 
@@ -154,7 +154,7 @@ The icon used for the system tray is `img/icon.png`.
 
 ## How to Quit
 
-Right-click the tray icon of Shimeji-ee, and select "Dismiss All".
+Right-click the tray icon of DesktopPet, and select "Dismiss All".
 
 ## How to Uninstall
 
@@ -169,8 +169,8 @@ Delete the unzipped folder.
 3. Install [IntelliJ IDEA Community Edition](https://www.jetbrains.com/idea/download/).
 4. Open the source code directory in the IDE.
 5. Open the Maven tool window on the right side of the UI. The icon to open the window should look like an "m".
-6. Right-click the "Shimeji-ee" item and select "Run Maven build". This will build the project and output the files to
-   the `target/` directory. The distributable file should be a ZIP file named `Shimeji-ee_[version].zip`.
+6. Right-click the "DesktopPet" item and select "Run Maven build". This will build the project and output the files to
+   the `target/` directory. The distributable file should be a ZIP file named `DesktopPet_[version].zip`.
 
 ## Licensing
 
@@ -186,15 +186,15 @@ You can also watch the [FAQ](https://www.youtube.com/watch?v=A1y9C1Vbn6Q) if you
 
 You can also join Kilkakon's [Discord server](https://discord.gg/dcJGAn3).
 
-Shimeji-ee takes a LOT of time to start if you have a lot of image sets, so give it some time. Try moving all but one
+DesktopPet takes a LOT of time to start if you have a lot of image sets, so give it some time. Try moving all but one
 image set from the `img` folder to the `img/unused` folder to see if you have a memory problem.
 
-If the Shimeji-ee icon appears, but no Shimeji appear:
+If the DesktopPet icon appears, but no Shimeji appear:
 
-1. Make sure you have the newest version of Shimeji-ee.
+1. Make sure you have the newest version of DesktopPet.
 2. Make sure you only have image set folders in your `img` directory.
 3. Make sure you have Java 25 or newer on your system.
-4. If you're somewhat computer savvy, you can try running Shimeji-ee from the command line. Navigate to the Shimeji-ee
-   directory and run this command: `"C:\Program Files\Java\jdk-25\bin\java" -jar Shimeji-ee.jar`
+4. If you're somewhat computer savvy, you can try running DesktopPet from the command line. Navigate to the DesktopPet
+   directory and run this command: `"C:\Program Files\Java\jdk-25\bin\java" -jar DesktopPet.jar`
 5. Try checking the log (`ShimejieeLogX.log`) for errors. If you find a bug (which is very likely), report it on
    Kilkakon's Discord server.

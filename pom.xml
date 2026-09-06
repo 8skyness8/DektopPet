@@ -9,7 +9,7 @@
     <version>1.0.22</version>
     <packaging>jar</packaging>
 
-    <name>Shimeji-ee</name>
+    <name>DesktopPet</name>
     <description>A desktop mascot that freely wanders and plays around the screen</description>
     <url>https://github.com/DalekCraft2/Shimeji-Desktop</url>
     <inceptionYear>2009</inceptionYear>

@@ -1,4 +1,4 @@
-name: Publish continuous release of Shimeji-Desktop
+name: Publish continuous release of DesktopPet
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: artifact
-          path: target/Shimeji-ee_*.zip
+          path: target/DesktopPet_*.zip
 
   release:
     needs: [ build ]
@@ -61,4 +61,4 @@ jobs:
           files: |
             **
           body: |
-            This is the latest snapshot of Shimeji-Desktop. It has been automatically generated from the latest commit.
+            This is the latest snapshot of DesktopPet. It has been automatically generated from the latest commit.
