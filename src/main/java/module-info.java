@@ -19,6 +19,7 @@ module com.group_finity.mascot {
     exports com.group_finity.mascot.environment;
     exports com.group_finity.mascot.image;
     exports com.group_finity.mascot.interaction;
+    exports com.group_finity.mascot.relationship;
     exports com.group_finity.mascot.platform.window;
     exports com.group_finity.mascot.script;
     exports com.group_finity.mascot.terrain;

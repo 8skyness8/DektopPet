@@ -54,7 +54,7 @@ public class BehaviorBuilder implements IBehaviorBuilder {
      */
     private final int frequency;
     private final int cooldown;
-    private final double[] utilityWeights = new double[7];
+    private final double[] utilityWeights = new double[8];
 
     /**
      * The conditions for this {@code BehaviorBuilder}.
@@ -141,7 +141,7 @@ public class BehaviorBuilder implements IBehaviorBuilder {
         frequency = Integer.parseInt(frequencyText);
         cooldown = integerAttribute(behaviorNode, schema, "Cooldown", 0);
         String[] utilityNames = {"EnergyWeight", "BoredomWeight", "CuriosityWeight", "AffectionWeight",
-                "SocialWeight", "CursorNearWeight", "CompanionNearWeight"};
+                "SocialWeight", "CursorNearWeight", "CompanionNearWeight", "RelationshipWeight"};
         for (int i = 0; i < utilityNames.length; i++) {
             utilityWeights[i] = doubleAttribute(behaviorNode, schema, utilityNames[i], 0);
         }
@@ -195,7 +195,7 @@ public class BehaviorBuilder implements IBehaviorBuilder {
         tempParams.remove(schema.getString("Toggleable"));
         tempParams.remove(schema.getString("Cooldown"));
         for (String key : new String[]{"EnergyWeight", "BoredomWeight", "CuriosityWeight", "AffectionWeight",
-                "SocialWeight", "CursorNearWeight", "CompanionNearWeight"}) tempParams.remove(schema.getString(key));
+                "SocialWeight", "CursorNearWeight", "CompanionNearWeight", "RelationshipWeight"}) tempParams.remove(schema.getString(key));
         if (tempParams.isEmpty()) {
             // Use the same one empty map instance to save memory
             params = Map.of();

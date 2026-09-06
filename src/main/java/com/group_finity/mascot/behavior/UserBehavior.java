@@ -11,6 +11,7 @@ import com.group_finity.mascot.config.Configuration;
 import com.group_finity.mascot.environment.Area;
 import com.group_finity.mascot.environment.MascotEnvironment;
 import com.group_finity.mascot.script.VariableException;
+import com.group_finity.mascot.relationship.InteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -254,6 +255,8 @@ public class UserBehavior implements Behavior {
                             Main.getInstance().getConfiguration(mascot.getImageSet()).isBehaviorEnabled(hotspot.getBehaviour(), mascot)) {
                         // activate hotspot
                         handled = true;
+                        mascot.getNaturalBehaviorState().interaction(2);
+                        mascot.recordInteraction(InteractionEvent.AFFECTION);
                         mascot.setCursorPosition(event.getPoint());
                         if (hotspot.getBehaviour() != null) {
                             try {
@@ -309,6 +312,8 @@ public class UserBehavior implements Behavior {
             if (mascot.isDragging()) {
                 // Stop dragging
                 mascot.setDragging(false);
+                mascot.recordInteraction(InteractionEvent.THROW);
+                if (mascot.getManager() != null) mascot.getManager().cancelSocial(mascot);
                 try {
                     mascot.setBehavior(configuration.buildBehavior(configuration.getSchema().getString(BEHAVIORNAME_THROWN)));
                 } catch (final BehaviorInstantiationException e) {

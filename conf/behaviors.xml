@@ -40,10 +40,12 @@
                 <BehaviorReference Name="StandUp" Frequency="1"/>
             </NextBehaviorList>
         </Behavior>
-        <Behavior Name="OfferGreeting" Frequency="2" Cooldown="500" SocialWeight="0.8" CompanionNearWeight="1.0"/>
-        <Behavior Name="AnswerGreeting" Frequency="2" Cooldown="500" SocialWeight="0.8" CompanionNearWeight="1.0"
+        <Behavior Name="OfferGreeting" Frequency="0" Cooldown="500" SocialWeight="0.8"
+                  CompanionNearWeight="1.0" RelationshipWeight="0.25"/>
+        <Behavior Name="AnswerGreeting" Frequency="0" Cooldown="500" SocialWeight="0.8" CompanionNearWeight="1.0"
                   Condition="#{mascot.totalCount &gt; 1}"/>
-        <Behavior Name="IdleThought" Frequency="3" Cooldown="750" BoredomWeight="0.3"/>
+        <Behavior Name="IdleThought" Frequency="3" Cooldown="750" BoredomWeight="0.3"
+                  RelationshipWeight="0.15"/>
 
         <!-- On the Floor -->
         <Condition Condition="#{mascot.environment.floor.isOn(mascot.anchor)}">

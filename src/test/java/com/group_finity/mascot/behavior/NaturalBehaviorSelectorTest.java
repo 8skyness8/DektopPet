@@ -47,9 +47,18 @@ class NaturalBehaviorSelectorTest {
         assertTrue(state.getNeeds().get("boredom") <= 100);
     }
 
+    @Test void optionalRelationshipMetadataAdjustsUtility() {
+        NaturalBehaviorState state = new NaturalBehaviorState();
+        state.setRelationship(100);
+        var bonded = new NaturalBehaviorSelector.Candidate<>("bonded", "bonded", 10, 0,
+                0, 0, 0, 0, 0, 0, 0, 5);
+        var neutral = candidate("neutral", 10, 0, 0, 0);
+        assertEquals("bonded", selector.select(List.of(bonded, neutral), state, false, false, new Random(0)));
+    }
+
     private NaturalBehaviorSelector.Candidate<String> candidate(String name, int frequency, int cooldown,
                                                                   double boredom, double cursor) {
         return new NaturalBehaviorSelector.Candidate<>(name, name, frequency, cooldown,
-                0, boredom, 0, 0, 0, cursor, 0);
+                0, boredom, 0, 0, 0, cursor, 0, 0);
     }
 }
