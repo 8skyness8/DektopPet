@@ -1,13 +1,22 @@
-package com.group_finity.mascot.config;
+package com.group_finity.mascot;
 
+import com.group_finity.mascot.config.Configuration;
+import com.group_finity.mascot.config.Entry;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DesktopPetMilestoneConfigurationTest {
+    @BeforeAll
+    static void initializeRuntimeLanguage() {
+        Main.getInstance().loadLanguage(Locale.ENGLISH);
+    }
+
     @Test void productionConfigurationLoadsAndValidates() throws Exception {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
