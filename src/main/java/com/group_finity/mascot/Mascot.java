@@ -4,6 +4,7 @@ import com.group_finity.mascot.animation.Animation;
 import com.group_finity.mascot.animation.Hotspot;
 import com.group_finity.mascot.behavior.Behavior;
 import com.group_finity.mascot.behavior.BehaviorExecutionException;
+import com.group_finity.mascot.behavior.PersonalityState;
 import com.group_finity.mascot.behavior.UserBehavior;
 import com.group_finity.mascot.config.BehaviorInstantiationException;
 import com.group_finity.mascot.config.Configuration;
@@ -278,6 +279,11 @@ public class Mascot {
      * @see #getVariables()
      */
     private Map<String, Object> variables = null;
+    private final PersonalityState personalityState = new PersonalityState();
+
+    public PersonalityState getPersonalityState() {
+        return personalityState;
+    }
 
     /**
      * Creates a new {@code Mascot} with the specified image set.
@@ -612,6 +618,7 @@ public class Mascot {
      */
     synchronized void tick() {
         if (isAnimating()) {
+            environment.updateWindowTerrain();
             if (behavior != null) {
                 try {
                     behavior.next();

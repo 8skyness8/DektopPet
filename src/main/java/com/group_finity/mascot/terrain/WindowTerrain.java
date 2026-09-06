@@ -44,6 +44,12 @@ public final class WindowTerrain {
         return edges.stream().filter(edge -> edge.type() == type).toList();
     }
 
+    public Optional<WindowEdge> edge(long sourceIdentifier, EdgeType type) {
+        return edges(type).stream()
+                .filter(edge -> edge.sourceWindowIdentifier() == sourceIdentifier)
+                .findFirst();
+    }
+
     /**
      * Finds the closest edge by perpendicular distance, then along-edge distance.
      * The natural edge ordering provides deterministic tie breaking.

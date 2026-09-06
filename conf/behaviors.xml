@@ -35,6 +35,13 @@
 
         <Behavior Name="PullUp" Frequency="0" Hidden="true"/>
         <Behavior Name="Divided" Frequency="0" Hidden="true"/>
+        <Behavior Name="PetResponse" Frequency="0" Hidden="true">
+            <NextBehaviorList Add="false">
+                <BehaviorReference Name="StandUp" Frequency="1"/>
+            </NextBehaviorList>
+        </Behavior>
+        <Behavior Name="ClimbWindowSide" Frequency="0" Hidden="true"/>
+        <Behavior Name="HangFromWindowBottom" Frequency="0" Hidden="true"/>
 
         <!-- On the Floor -->
         <Condition Condition="#{mascot.environment.floor.isOn(mascot.anchor)}">
@@ -57,6 +64,8 @@
             </Behavior>
 
             <Behavior Name="SplitIntoTwo" Frequency="50" Condition="#{mascot.totalCount &lt; 50}"/>
+            <Behavior Name="CuriousObservation" Frequency="15"
+                      Condition="${mascot.personalityState.get('curiosity') &lt; 10}"/>
         </Condition>
 
         <!-- On the Wall -->
@@ -135,11 +144,20 @@
             <Behavior Name="ClimbIEWall" Frequency="100" Hidden="true"/>
         </Condition>
 
+        <!-- Application-window terrain remains usable when the source is not the active window. -->
+        <Condition Condition="#{mascot.environment.windowWall.isOn(mascot.anchor)}">
+            <Behavior Name="ClimbWindowSide" Frequency="100" Hidden="true"/>
+        </Condition>
+
         <!-- On the Bottom of IE -->
         <Condition Condition="#{mascot.environment.activeIE.bottomBorder.isOn(mascot.anchor)}">
             <Behavior Name="ClimbIEBottom" Frequency="100" Hidden="true"/>
             <Behavior Name="GrabIEBottomLeftWall" Frequency="100" Hidden="true"/>
             <Behavior Name="GrabIEBottomRightWall" Frequency="100" Hidden="true"/>
+        </Condition>
+
+        <Condition Condition="#{mascot.environment.windowBottom.isOn(mascot.anchor)}">
+            <Behavior Name="HangFromWindowBottom" Frequency="100" Hidden="true"/>
         </Condition>
 
         <Behavior Name="JumpFromLeftWall" Frequency="50" Condition="#{!mascot.environment.workArea.leftBorder.isOn(mascot.anchor) &amp;&amp;
