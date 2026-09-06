@@ -21,7 +21,7 @@
             <directory>.</directory>
             <outputDirectory>.</outputDirectory>
             <includes>
-                <include>Shimeji-ee</include>
+                <include>DesktopPet</include>
                 <include>LICENSE.txt</include>
                 <include>originalreadme.txt</include>
                 <include>readme.txt</include>

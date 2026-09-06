@@ -699,7 +699,7 @@ public class SettingsWindow extends JDialog implements Localizable {
         pnlAbout.add(rigid1);
 
         lblShimejiEE.setFont(lblShimejiEE.getFont().deriveFont(lblShimejiEE.getFont().getStyle() | java.awt.Font.BOLD, lblShimejiEE.getFont().getSize()+10));
-        lblShimejiEE.setText("Shimeji-ee");
+        lblShimejiEE.setText("DesktopPet");
         lblShimejiEE.setAlignmentX(0.5F);
         pnlAbout.add(lblShimejiEE);
         pnlAbout.add(rigid2);

@@ -1,6 +1,6 @@
-Shimeji-ee: Shimeji English Enhanced
+DesktopPet
 
-Shimeji-ee is a desktop mascot for Windows, macOS, and Linux that freely wanders and plays around the screen. The mascot
+DesktopPet is a desktop mascot derived from Shimeji-ee for Windows, macOS, and Linux that freely wanders and plays around the screen. The mascot
 is very configurable; its actions are defined through XML and its animations/images can be (painstakingly) customized.
 Shimeji was originally created by Yuki Yamada of Group Finity. This branch of the original Shimeji project not only
 translates the program/source to English, but adds additional enhancements to Shimeji by Kilkakon and other members of
@@ -36,9 +36,9 @@ the community.
 
 ==== How to Start ====
 
-1. Open the Shimeji-ee JAR file ("Shimeji-ee.jar").
-    * On Windows, you can alternatively open "Shimeji-ee.exe".
-    * On macOS/Linux, you can alternatively open "Shimeji-ee".
+1. Open the DesktopPet JAR file ("DesktopPet.jar").
+    * On Windows, you can alternatively open "DesktopPet.exe".
+    * On macOS/Linux, you can alternatively open "DesktopPet".
 2. Right-click the tray icon for general options.
 3. Right-click a Shimeji for options relating to it.
 
@@ -59,13 +59,13 @@ For example, if you want to add, say, a new Batman Shimeji:
 2. You must have an image set that mimics the contents of img/Shimeji. Create and put new versions of shime1.png -
    shime46.png (with Batman images, of course) in the img/Batman folder. The filenames must be the same as the
    img/Shimeji files. Refer to img/Shimeji for the proper character positions.
-3. Start Shimeji-ee. Now Shimeji and Batman will drop. Right-click Batman to perform Batman specific options. Pressing
+3. Start DesktopPet. Now Shimeji and Batman will drop. Right-click Batman to perform Batman specific options. Pressing
    "Call Shimeji" in the tray icon will randomly create and add either Shimeji or Batman.
 
-When Shimeji-ee starts, one Shimeji for every image set in the img folder will be created. If you have too many image
+When DesktopPet starts, one Shimeji for every image set in the img folder will be created. If you have too many image
 sets, a lot of your computer's memory will be used... so be careful.
 
-Shimeji-ee will ignore all the image sets that are in the img/unused folder, so you can hide image sets in there. There
+DesktopPet will ignore all the image sets that are in the img/unused folder, so you can hide image sets in there. There
 is also a tool, Image Set Chooser, that will let you select image sets at run time. It remembers previous options via
 the conf/settings.properties file. Don't choose too many at once.
 
@@ -95,10 +95,10 @@ Each type of Shimeji is configured through:
 3. A behaviors file. Unless img/[NAME]/conf/behaviors.xml or conf/[NAME]/behaviors.xml exists, conf/behaviors.xml will
    be used.
 
-When Shimeji-ee starts, one Shimeji for every image set in the img folder will be created. If you have too many image
+When DesktopPet starts, one Shimeji for every image set in the img folder will be created. If you have too many image
 sets, a lot of your computer's memory will be used... so be careful.
 
-Shimeji-ee will ignore all the image sets that are in the img/unused folder, so you can hide image sets in there. There
+DesktopPet will ignore all the image sets that are in the img/unused folder, so you can hide image sets in there. There
 is also a tool, Image Set Chooser, that will let you select image sets at run time. It remembers previous options via
 the conf/settings.properties file. Don't choose too many at once.
 
@@ -128,7 +128,7 @@ The icon used for the system tray is img/icon.png.
 
 ==== How to Quit ====
 
-Right-click the tray icon of Shimeji-ee, and select "Dismiss All".
+Right-click the tray icon of DesktopPet, and select "Dismiss All".
 
 ==== How to Uninstall ====
 
@@ -148,15 +148,15 @@ You can also watch the FAQ if you encounter problems: https://www.youtube.com/wa
 
 You can also join Kilkakon's Discord server: https://discord.gg/dcJGAn3
 
-Shimeji-ee takes a LOT of time to start if you have a lot of image sets, so give it some time. Try moving all but one
+DesktopPet takes a LOT of time to start if you have a lot of image sets, so give it some time. Try moving all but one
 image set from the img folder to the img/unused folder to see if you have a memory problem.
 
-If the Shimeji-ee icon appears, but no Shimeji appear:
+If the DesktopPet icon appears, but no Shimeji appear:
 
-1. Make sure you have the newest version of Shimeji-ee.
+1. Make sure you have the newest version of DesktopPet.
 2. Make sure you only have image set folders in your img directory.
 3. Make sure you have Java 25 or newer on your system.
-4. If you're somewhat computer savvy, you can try running Shimeji-ee from the command line. Navigate to the Shimeji-ee
-   directory and run this command: "C:\Program Files\Java\jdk-25\bin\java" -jar Shimeji-ee.jar
+4. If you're somewhat computer savvy, you can try running DesktopPet from the command line. Navigate to the DesktopPet
+   directory and run this command: "C:\Program Files\Java\jdk-25\bin\java" -jar DesktopPet.jar
 5. Try checking the log (ShimejieeLogX.log) for errors. If you find a bug (which is very likely), report it on
    Kilkakon's Discord server.

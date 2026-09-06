@@ -192,7 +192,7 @@ public class ImageSetChooser extends JDialog implements Localizable {
         selectAllLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Shimeji-ee Image Set Chooser");
+        setTitle("DesktopPet Image Set Chooser");
         setMinimumSize(getPreferredSize());
 
         jScrollPane1.getVerticalScrollBar().setUnitIncrement(9);

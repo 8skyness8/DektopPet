@@ -260,7 +260,7 @@ public class Settings {
         properties.setProperty("BackgroundImage", backgroundImage == null ? "" : backgroundImage.toString());
 
         try (OutputStream output = Files.newOutputStream(path)) {
-            properties.store(output, "Shimeji-ee Configuration Options");
+            properties.store(output, "DesktopPet Configuration Options");
         } catch (IOException e) {
             log.error("Failed to save settings", e);
         }
