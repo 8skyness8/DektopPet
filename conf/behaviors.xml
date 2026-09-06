@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Mascot xmlns="http://www.group-finity.com/Mascot" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.group-finity.com/Mascot Mascot.xsd">
 
@@ -40,8 +40,6 @@
                 <BehaviorReference Name="StandUp" Frequency="1"/>
             </NextBehaviorList>
         </Behavior>
-        <Behavior Name="ClimbWindowSide" Frequency="0" Hidden="true"/>
-        <Behavior Name="HangFromWindowBottom" Frequency="0" Hidden="true"/>
         <Behavior Name="OfferGreeting" Frequency="2"/>
         <Behavior Name="AnswerGreeting" Frequency="2" Condition="#{mascot.totalCount &gt; 1}"/>
 

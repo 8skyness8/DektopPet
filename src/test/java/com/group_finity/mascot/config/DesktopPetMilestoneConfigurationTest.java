@@ -1,18 +1,62 @@
-package com.group_finity.mascot.config;
+package com.group_finity.mascot;
 
+import com.group_finity.mascot.config.Configuration;
+import com.group_finity.mascot.config.Entry;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DesktopPetMilestoneConfigurationTest {
-    @Test void configuresClimbHangPersonalityAndPettingResponses() throws Exception {
+    private static final Path GENERATED_DEV_PET = Path.of("target", "generated-distribution", "img", "DevPet");
+    private static final Path RUNTIME_DEV_PET = Path.of("img", "DevPet");
+
+    @BeforeAll
+    static void initializeRuntimePrerequisites() throws Exception {
+        Main.getInstance().loadLanguage(Locale.ENGLISH);
+
+        if (!Files.isDirectory(GENERATED_DEV_PET)) {
+            throw new IllegalStateException("Generated DevPet sprites are missing: " + GENERATED_DEV_PET);
+        }
+
+        Files.createDirectories(RUNTIME_DEV_PET);
+        try (var files = Files.list(GENERATED_DEV_PET)) {
+            for (Path source : files.toList()) {
+                if (Files.isRegularFile(source)) {
+                    Files.copy(source, RUNTIME_DEV_PET.resolve(source.getFileName()));
+                }
+            }
+        }
+    }
+
+    @AfterAll
+    static void cleanUpRuntimeAssets() throws Exception {
+        if (Files.exists(RUNTIME_DEV_PET)) {
+            try (var paths = Files.walk(RUNTIME_DEV_PET)) {
+                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                    Files.deleteIfExists(path);
+                }
+            }
+        }
+    }
+
+    @Test void productionConfigurationLoadsAndValidates() throws Exception {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         var actions = factory.newDocumentBuilder().parse(Path.of("conf/actions.xml").toFile());
         var behaviors = factory.newDocumentBuilder().parse(Path.of("conf/behaviors.xml").toFile());
+
+        Configuration configuration = new Configuration();
+        configuration.load(new Entry(actions.getDocumentElement()), "DevPet");
+        configuration.load(new Entry(behaviors.getDocumentElement()), "DevPet");
+        configuration.validate();
 
         assertEquals(1, named(actions, "Action", "ClimbWindowSide"));
         assertEquals(1, named(actions, "Action", "HangFromWindowBottom"));
@@ -24,6 +68,8 @@ class DesktopPetMilestoneConfigurationTest {
         assertEquals(1, named(actions, "Hotspot", null));
         assertEquals(1, named(behaviors, "Behavior", "CuriousObservation"));
         assertEquals(1, named(behaviors, "Behavior", "PetResponse"));
+        assertEquals(1, named(behaviors, "Behavior", "ClimbWindowSide"));
+        assertEquals(1, named(behaviors, "Behavior", "HangFromWindowBottom"));
         assertEquals(1, named(behaviors, "Behavior", "OfferGreeting"));
         assertEquals(1, named(behaviors, "Behavior", "AnswerGreeting"));
     }
