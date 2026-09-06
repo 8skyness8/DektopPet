@@ -18,6 +18,7 @@ module com.group_finity.mascot {
     exports com.group_finity.mascot.behavior;
     exports com.group_finity.mascot.environment;
     exports com.group_finity.mascot.image;
+    exports com.group_finity.mascot.platform.window;
     exports com.group_finity.mascot.script;
 
     // Open JNA packages to JNA
