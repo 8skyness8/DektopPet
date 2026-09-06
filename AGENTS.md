@@ -91,12 +91,14 @@ use the project's configured verification path instead of guessing.
 
 Do not claim a test passed unless it was actually executed successfully. A Codex/local
 environment failure caused only by blocked Maven Central access may be reported as an
-environment limitation; the Windows pull-request CI remains the authoritative hosted
-build/test gate.
+environment limitation; the Windows hosted validation remains the authoritative
+build/test gate before automated promotion.
 
 ## Pull request automation contract
 
-Every Codex pull request must include exactly one of these standalone lines in its body:
+Every Codex task's final commit message must contain exactly one of these standalone
+lines, and every manually created Codex pull request must contain the same marker in its
+body:
 
     Automation: auto-merge
 
@@ -113,20 +115,37 @@ or explicitly calls for a manual Windows check before completion.
 
 When uncertain, choose `Automation: manual-review`.
 
-A pull request marked `Automation: auto-merge` is eligible for repository automation only
-when all of the following are true:
+A Codex change is eligible for repository auto-promotion only when all of the following
+are true:
 
-- it targets `main`;
-- it comes from a branch in this repository whose name starts with `codex/`;
-- it is not a draft;
-- the `Validate pull requests` workflow succeeds for the exact current head commit;
-- it is not also marked `Automation: manual-review`;
-- it does not carry a `manual-review` label.
+- it is pushed to a branch in this repository whose name starts with `codex/`;
+- the exact current branch head succeeds in the read-only Windows hosted validation;
+- the validator workflow itself was not changed by the Codex branch;
+- no `.github/workflows/` file is changed by the Codex branch;
+- the final commit contains `Automation: auto-merge`;
+- the resulting pull request is not a draft, is not also marked manual-review, and does
+  not carry a `manual-review` label.
 
-The auto-merge workflow must never check out or execute untrusted pull-request code with a
-write-capable token. It may merge only the exact commit SHA that successfully completed
-the validation workflow. CI failure, a newer unvalidated commit, missing automation
-marker, draft state, forked PR, or manual-review marker/label must leave the PR unmerged.
+The write-capable promotion workflow must never check out or execute Codex branch code.
+It may create a pull request and merge only the exact commit SHA that successfully
+completed the read-only validation workflow. CI failure, a newer unvalidated commit,
+workflow changes, a missing marker, draft state, forked PR, or manual-review marker/label
+must leave the pull request unmerged.
+
+### Codex branch handoff
+
+When the Codex environment has authenticated Git push access:
+
+1. Work on a `codex/*` branch, never directly on `main`.
+2. Make the final commit with the required automation marker.
+3. Push the current `codex/*` branch to `origin`.
+4. Do not run `gh pr create` unless the user explicitly asks for a manual PR. Repository
+   automation will validate the pushed SHA and create the PR automatically.
+5. Report the pushed branch, commit SHA, selected automation marker, and any manual checks.
+
+If push authentication is unavailable, do not invent a successful handoff. Commit the
+work, report that push/PR creation could not be completed, and leave the task ready for
+the Codex UI or another authenticated Git client. See `docs/CODEX_AUTOMATION.md`.
 
 ## Autonomous task loop
 
@@ -141,14 +160,17 @@ For each task:
 6. Run `mvn test` and `mvn clean verify` when applicable.
 7. Review the diff for unrelated changes.
 8. If the task contains roadmap milestones, mark each completed milestone in
-   `docs/ROADMAP.md` in the same pull request only after its criteria are satisfied.
-9. Decide the PR automation marker using the policy above and include it in the PR body.
-10. Report:
+   `docs/ROADMAP.md` in the same change only after its criteria are satisfied.
+9. Decide the automation marker using the policy above and include it in the final commit.
+10. If authenticated Git push is available, push the `codex/*` branch for repository
+    validation/promotion; otherwise report the handoff limitation.
+11. Report:
     - implementation summary
     - files changed
     - tests/build commands run
     - results
-    - PR automation marker selected and why
+    - pushed branch/commit when applicable
+    - automation marker selected and why
     - remaining manual Windows checks and other limitations, if any
 
 ## Architecture direction
