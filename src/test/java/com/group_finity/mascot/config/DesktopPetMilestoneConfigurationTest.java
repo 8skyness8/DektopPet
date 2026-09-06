@@ -8,11 +8,16 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DesktopPetMilestoneConfigurationTest {
-    @Test void configuresClimbHangPersonalityAndPettingResponses() throws Exception {
+    @Test void productionConfigurationLoadsAndValidates() throws Exception {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         var actions = factory.newDocumentBuilder().parse(Path.of("conf/actions.xml").toFile());
         var behaviors = factory.newDocumentBuilder().parse(Path.of("conf/behaviors.xml").toFile());
+
+        Configuration configuration = new Configuration();
+        configuration.load(new Entry(actions.getDocumentElement()), "DevPet");
+        configuration.load(new Entry(behaviors.getDocumentElement()), "DevPet");
+        configuration.validate();
 
         assertEquals(1, named(actions, "Action", "ClimbWindowSide"));
         assertEquals(1, named(actions, "Action", "HangFromWindowBottom"));
@@ -24,6 +29,8 @@ class DesktopPetMilestoneConfigurationTest {
         assertEquals(1, named(actions, "Hotspot", null));
         assertEquals(1, named(behaviors, "Behavior", "CuriousObservation"));
         assertEquals(1, named(behaviors, "Behavior", "PetResponse"));
+        assertEquals(1, named(behaviors, "Behavior", "ClimbWindowSide"));
+        assertEquals(1, named(behaviors, "Behavior", "HangFromWindowBottom"));
         assertEquals(1, named(behaviors, "Behavior", "OfferGreeting"));
         assertEquals(1, named(behaviors, "Behavior", "AnswerGreeting"));
     }
