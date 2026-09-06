@@ -23,10 +23,11 @@ class RelationshipStateTest {
         var file = directory.resolve("relationships.properties");
         RelationshipStore store = new RelationshipStore();
         RelationshipState state = new RelationshipState(73);
-        state.apply(InteractionEvent.DRAG, 1, 0, 45);
+        assertTrue(state.apply(InteractionEvent.DRAG, 1, 0, 45));
+        assertEquals(74, state.getBond());
         store.save(file, Map.of("Dev Pet/日本", state));
         RelationshipState loaded = store.load(file).get("Dev Pet/日本");
-        assertEquals(73, loaded.getBond());
+        assertEquals(74, loaded.getBond());
         assertFalse(loaded.apply(InteractionEvent.DRAG, 1, 100, 46));
 
         Files.writeString(file, "not valid unicode=\\uXXZZ\n");
