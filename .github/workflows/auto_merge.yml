@@ -1,0 +1,86 @@
+name: Auto merge validated Codex pull requests
+
+on:
+  workflow_run:
+    workflows: ["Validate pull requests"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Merge eligible Codex pull request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          VALIDATED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          prs="$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPOSITORY/commits/$VALIDATED_HEAD_SHA/pulls")"
+
+          pr="$(jq -c '[.[] | select(.state == "open" and .base.ref == "main")] | first' <<<"$prs")"
+          if [[ "$pr" == "null" ]]; then
+            echo "No open pull request to main found for validated commit $VALIDATED_HEAD_SHA."
+            exit 0
+          fi
+
+          number="$(jq -r '.number' <<<"$pr")"
+          head_ref="$(jq -r '.head.ref' <<<"$pr")"
+          head_repo="$(jq -r '.head.repo.full_name // ""' <<<"$pr")"
+          draft="$(jq -r '.draft' <<<"$pr")"
+          body="$(jq -r '.body // ""' <<<"$pr")"
+
+          if [[ "$head_repo" != "$REPOSITORY" ]]; then
+            echo "PR #$number comes from another repository; leaving it for manual review."
+            exit 0
+          fi
+
+          if [[ "$head_ref" != codex/* ]]; then
+            echo "PR #$number is not a codex/* branch; leaving it for manual review."
+            exit 0
+          fi
+
+          if [[ "$draft" == "true" ]]; then
+            echo "PR #$number is a draft; leaving it unmerged."
+            exit 0
+          fi
+
+          if ! grep -Fxq 'Automation: auto-merge' <<<"$body"; then
+            echo "PR #$number is not explicitly marked Automation: auto-merge."
+            exit 0
+          fi
+
+          if grep -Fxq 'Automation: manual-review' <<<"$body"; then
+            echo "PR #$number also requests manual review; leaving it unmerged."
+            exit 0
+          fi
+
+          if gh api "/repos/$REPOSITORY/issues/$number" --jq '.labels[].name' | grep -Fxq 'manual-review'; then
+            echo "PR #$number has the manual-review label; leaving it unmerged."
+            exit 0
+          fi
+
+          current_head_sha="$(gh api "/repos/$REPOSITORY/pulls/$number" --jq '.head.sha')"
+          if [[ "$current_head_sha" != "$VALIDATED_HEAD_SHA" ]]; then
+            echo "PR #$number moved after validation; waiting for CI on the new head."
+            exit 0
+          fi
+
+          echo "Merging PR #$number after successful Windows validation."
+          gh api \
+            --method PUT \
+            "/repos/$REPOSITORY/pulls/$number/merge" \
+            -f merge_method=squash \
+            -f sha="$VALIDATED_HEAD_SHA"
