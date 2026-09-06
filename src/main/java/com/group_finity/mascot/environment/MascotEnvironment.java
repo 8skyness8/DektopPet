@@ -7,8 +7,12 @@ import com.group_finity.mascot.platform.window.DesktopWindowInfoFactory;
 import com.group_finity.mascot.platform.window.VisibleWindowDiscovery;
 import com.group_finity.mascot.terrain.EdgeType;
 import com.group_finity.mascot.terrain.WindowTerrain;
+import com.group_finity.mascot.terrain.WindowTerrainRefresh;
+import com.group_finity.mascot.terrain.WindowSupport;
 
 import java.awt.*;
+import java.util.Optional;
+import java.util.concurrent.Executors;
 
 /**
  * Provides mascots with information about the desktop environment, for use in scripts.
@@ -28,10 +32,19 @@ public class MascotEnvironment {
      */
     private final Mascot mascot;
 
-    private final VisibleWindowDiscovery visibleWindowDiscovery =
+    private static final long WINDOW_REFRESH_MILLIS = 250;
+    private static final VisibleWindowDiscovery visibleWindowDiscovery =
             new VisibleWindowDiscovery(DesktopWindowInfoFactory.create());
+    private static final WindowTerrainRefresh terrainRefresh = new WindowTerrainRefresh(
+            visibleWindowDiscovery::discover,
+            Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "DesktopPet-window-terrain");
+                thread.setDaemon(true);
+                return thread;
+            }), WINDOW_REFRESH_MILLIS);
 
     private WindowTerrain windowTerrain = WindowTerrain.EMPTY;
+    private long terrainGeneration;
 
     /**
      * The work area containing this environment's {@link Mascot}.
@@ -178,6 +191,10 @@ public class MascotEnvironment {
     public Border getCeiling(boolean ignoreSeparator) {
         Point anchor = mascot.getAnchor();
 
+        for (var edge : windowTerrain.edges(EdgeType.BOTTOM)) {
+            if (edge.contains(anchor)) return new WindowEdgeBorder(edge);
+        }
+
         Area activeIe = getActiveIE();
         Border activeIeBorder = activeIe.getBottomBorder();
         if (activeIeBorder.isOn(anchor)) {
@@ -223,7 +240,7 @@ public class MascotEnvironment {
 
         for (var edge : windowTerrain.edges(EdgeType.TOP)) {
             if (edge.contains(anchor)) {
-                return new WindowTopBorder(edge);
+                return new WindowEdgeBorder(edge);
             }
         }
 
@@ -249,8 +266,26 @@ public class MascotEnvironment {
      * Native window objects never escape the platform information implementation.
      */
     public WindowTerrain refreshWindowTerrain() {
-        windowTerrain = WindowTerrain.fromSnapshots(visibleWindowDiscovery.discover());
+        terrainRefresh.refreshIfDue(System.currentTimeMillis());
+        acceptLatestTerrain();
         return windowTerrain;
+    }
+
+    /** Applies a completed refresh and carries a mascot that is standing on a retained window. */
+    public void updateWindowTerrain() {
+        terrainRefresh.refreshIfDue(System.currentTimeMillis());
+        acceptLatestTerrain();
+    }
+
+    private void acceptLatestTerrain() {
+        WindowTerrainRefresh.Snapshot latest = terrainRefresh.current();
+        if (latest.generation() == terrainGeneration) return;
+        Point anchor = mascot.getAnchor();
+        windowTerrain.edges(EdgeType.TOP).stream().filter(edge -> edge.contains(anchor)).findFirst()
+                .flatMap(edge -> WindowSupport.carry(anchor, edge, latest.terrain()))
+                .ifPresent(anchor::setLocation);
+        windowTerrain = latest.terrain();
+        terrainGeneration = latest.generation();
     }
 
     /**
@@ -278,6 +313,11 @@ public class MascotEnvironment {
         boolean isLookRight = mascot.isLookRight();
         Point anchor = mascot.getAnchor();
 
+        EdgeType windowSide = isLookRight ? EdgeType.LEFT : EdgeType.RIGHT;
+        for (var edge : windowTerrain.edges(windowSide)) {
+            if (edge.contains(anchor)) return new WindowEdgeBorder(edge);
+        }
+
         Area activeIe = getActiveIE();
         Border activeIeBorder = isLookRight ? activeIe.getLeftBorder() : activeIe.getRightBorder();
         if (activeIeBorder.isOn(anchor)) {
@@ -293,6 +333,46 @@ public class MascotEnvironment {
         }
 
         return NotOnBorder.INSTANCE;
+    }
+
+    /** Window-side terrain at the anchor, independently of the foreground window. */
+    public Border getWindowWall() {
+        Point anchor = mascot.getAnchor();
+        for (EdgeType type : new EdgeType[]{EdgeType.LEFT, EdgeType.RIGHT}) {
+            for (var edge : windowTerrain.edges(type)) {
+                if (edge.contains(anchor)) return new WindowEdgeBorder(edge);
+            }
+        }
+        return NotOnBorder.INSTANCE;
+    }
+
+    /** Window-bottom terrain at the anchor, independently of the foreground window. */
+    public Border getWindowBottom() {
+        Point anchor = mascot.getAnchor();
+        for (var edge : windowTerrain.edges(EdgeType.BOTTOM)) {
+            if (edge.contains(anchor)) return new WindowEdgeBorder(edge);
+        }
+        return NotOnBorder.INSTANCE;
+    }
+
+    private final class WindowEdgeBorder implements Border {
+        private final long sourceIdentifier;
+        private final EdgeType type;
+        private WindowEdgeBorder(com.group_finity.mascot.terrain.WindowEdge edge) {
+            sourceIdentifier = edge.sourceWindowIdentifier();
+            type = edge.type();
+        }
+        @Override public boolean isOn(Point point) {
+            return windowTerrain.edge(sourceIdentifier, type).map(edge -> edge.contains(point)).orElse(false);
+        }
+        @Override public Point move(Point point) {
+            Optional<com.group_finity.mascot.terrain.WindowEdge> current =
+                    windowTerrain.edge(sourceIdentifier, type);
+            if (current.isEmpty()) return point;
+            var edge = current.get();
+            if (edge.isHorizontal()) point.y = edge.coordinate(); else point.x = edge.coordinate();
+            return point;
+        }
     }
 
     /**

@@ -84,7 +84,7 @@ Manual verification remains required on Windows 10 and Windows 11 to confirm lan
 standing on common application windows, including overlapping windows, while ordinary
 desktop-floor landing remains unchanged.
 
-### 5. [ ] Tracking moved/resized windows
+### 5. [x] Tracking moved/resized windows
 
 - Keep occupied window terrain synchronized when its source window moves, resizes,
   minimizes, closes, or changes eligibility.
@@ -94,7 +94,13 @@ desktop-floor landing remains unchanged.
   - Add deterministic tests for snapshot changes and support invalidation.
   - Document and manually check responsiveness and resource usage on Windows.
 
-### 6. [ ] Side/ceiling interactions such as climbing/hanging
+Eligible-window discovery now runs on one daemon worker, at most four times per second,
+and publishes immutable terrain without waiting in the mascot loop. A standing anchor is
+carried proportionally when its source top edge moves or resizes; loss of eligible support
+causes existing bordered actions to transition safely to falling. See
+[`WINDOW_INTERACTION_SMOKE_TEST.md`](WINDOW_INTERACTION_SMOKE_TEST.md) for required Windows checks.
+
+### 6. [x] Side/ceiling interactions such as climbing/hanging
 
 - Add configuration-driven mascot interactions with application-window side and
   bottom edges.
@@ -104,15 +110,27 @@ desktop-floor landing remains unchanged.
   - Preserve ordinary screen-edge interactions when no window edge is eligible.
   - Test pure edge selection and transition preconditions; list manual animation checks.
 
-### 7. [ ] Richer behavior, state, and personality
+Window side and bottom edges now participate in the existing wall and ceiling border APIs.
+Configuration supplies a side-climb transition and a bottom-edge hang transition while
+the original work-area wall/ceiling fallbacks remain unchanged.
+
+### 7. [x] Richer behavior, state, and personality
 
 - Add a small, configuration-driven personality/state increment with deterministic
   non-GUI tests where feasible and no character-specific engine coupling.
 
-### 8. [ ] Direct user interaction
+A generic bounded integer personality store and configured `IncrementState` action let
+the occasional curious-observation behavior accumulate curiosity without mascot-specific
+engine logic. The configured cap also controls when that behavior remains eligible.
+
+### 8. [x] Direct user interaction
 
 - Add one focused interaction such as clicking or petting, including clear input
   behavior, configuration-driven mascot response, and manual GUI verification steps.
+
+A head hotspot uses the existing primary-button hotspot mechanism to select a configured
+pet response: affection increments, the mascot spins its head, and then returns to standing.
+Manual input and animation checks are listed in the Windows smoke-test document.
 
 ### 9. [ ] Lightweight bubbles, sounds, and presentation
 

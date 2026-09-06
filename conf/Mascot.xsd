@@ -483,6 +483,15 @@
                 </documentation>
             </annotation>
         </attribute>
+        <attribute name="StateKey" type="tns:ScriptableString">
+            <annotation><documentation>The personality state key used by IncrementState.</documentation></annotation>
+        </attribute>
+        <attribute name="StateAmount" type="tns:ScriptableInt" default="1">
+            <annotation><documentation>The amount added by IncrementState.</documentation></annotation>
+        </attribute>
+        <attribute name="StateMaximum" type="tns:ScriptableInt" default="10">
+            <annotation><documentation>The inclusive upper bound used by IncrementState.</documentation></annotation>
+        </attribute>
 
         <!--
         This is technically not part of the schema.
