@@ -44,6 +44,7 @@ public class SettingsWindow extends JDialog implements Localizable {
     private boolean alwaysShowShimejiChooser = false;
     private boolean alwaysShowInformationScreen = false;
     private boolean drawShimejiBounds = false;
+    private boolean presentationBubbles = true;
     private Filter filter = Filter.NEAREST_NEIGHBOUR;
     private double scaling = 1.0;
     private double opacity = 1.0;
@@ -97,6 +98,7 @@ public class SettingsWindow extends JDialog implements Localizable {
         alwaysShowShimejiChooser = settings.alwaysShowShimejiChooser;
         alwaysShowInformationScreen = settings.alwaysShowInformationScreen;
         drawShimejiBounds = settings.drawShimejiBounds;
+        presentationBubbles = settings.presentationBubbles;
         filter = settings.filter;
         opacity = settings.opacity;
         scaling = settings.scaling;
@@ -109,6 +111,7 @@ public class SettingsWindow extends JDialog implements Localizable {
         chkAlwaysShowShimejiChooser.setSelected(alwaysShowShimejiChooser);
         chkAlwaysShowInformationScreen.setSelected(alwaysShowInformationScreen);
         chkDrawShimejiBounds.setSelected(drawShimejiBounds);
+        chkPresentationBubbles.setSelected(presentationBubbles);
         radFilterHqx.setEnabled(scaling % 2 == 0 || scaling % 3 == 0);
         if (filter == Filter.BICUBIC) {
             radFilterBicubic.setSelected(true);
@@ -273,6 +276,7 @@ public class SettingsWindow extends JDialog implements Localizable {
         chkAlwaysShowInformationScreen = new javax.swing.JCheckBox();
         chkShowTrayIcon = new javax.swing.JCheckBox();
         chkDrawShimejiBounds = new javax.swing.JCheckBox();
+        chkPresentationBubbles = new javax.swing.JCheckBox();
         pnlInteractiveWindows = new javax.swing.JPanel();
         pnlInteractiveTabs = new javax.swing.JTabbedPane();
         pnlWhitelistTab = new javax.swing.JPanel();
@@ -376,6 +380,9 @@ public class SettingsWindow extends JDialog implements Localizable {
         chkDrawShimejiBounds.setText("Draw Shimeji Bounds");
         chkDrawShimejiBounds.addItemListener(this::chkDrawShimejiBoundsItemStateChanged);
 
+        chkPresentationBubbles.setText("Speech bubbles");
+        chkPresentationBubbles.addItemListener(evt -> presentationBubbles = evt.getStateChange() == java.awt.event.ItemEvent.SELECTED);
+
         javax.swing.GroupLayout pnlGeneralLayout = new javax.swing.GroupLayout(pnlGeneral);
         pnlGeneral.setLayout(pnlGeneralLayout);
         pnlGeneralLayout.setHorizontalGroup(
@@ -398,7 +405,8 @@ public class SettingsWindow extends JDialog implements Localizable {
                     .addComponent(lblOpacity)
                     .addComponent(chkAlwaysShowInformationScreen)
                     .addComponent(chkShowTrayIcon)
-                    .addComponent(chkDrawShimejiBounds))
+                    .addComponent(chkDrawShimejiBounds)
+                    .addComponent(chkPresentationBubbles))
                 .addContainerGap(52, Short.MAX_VALUE))
         );
         pnlGeneralLayout.setVerticalGroup(
@@ -412,6 +420,8 @@ public class SettingsWindow extends JDialog implements Localizable {
                 .addComponent(chkAlwaysShowInformationScreen)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(chkDrawShimejiBounds)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(chkPresentationBubbles)
                 .addGap(18, 18, 18)
                 .addComponent(lblOpacity)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -811,6 +821,7 @@ public class SettingsWindow extends JDialog implements Localizable {
         settings.scaling = scaling;
         settings.filter = filter;
         settings.drawShimejiBounds = drawShimejiBounds;
+        settings.presentationBubbles = presentationBubbles;
         settings.interactiveWindows = listData;
         settings.interactiveWindowsBlacklist = blacklistData;
         settings.windowedMode = windowedMode;
@@ -1076,6 +1087,7 @@ public class SettingsWindow extends JDialog implements Localizable {
     private javax.swing.JCheckBox chkAlwaysShowInformationScreen;
     private javax.swing.JCheckBox chkAlwaysShowShimejiChooser;
     private javax.swing.JCheckBox chkDrawShimejiBounds;
+    private javax.swing.JCheckBox chkPresentationBubbles;
     private javax.swing.JCheckBox chkShowTrayIcon;
     private javax.swing.JCheckBox chkWindowModeEnabled;
     private javax.swing.JComboBox<String> cmbBackgroundImageMode;

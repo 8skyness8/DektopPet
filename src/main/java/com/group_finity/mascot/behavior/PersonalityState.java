@@ -16,4 +16,10 @@ public final class PersonalityState {
         values.put(name, next);
         return next;
     }
+
+    public synchronized int set(String name, int value, int maximum) {
+        int bounded = Math.max(0, Math.min(maximum, value));
+        values.put(name, bounded);
+        return bounded;
+    }
 }

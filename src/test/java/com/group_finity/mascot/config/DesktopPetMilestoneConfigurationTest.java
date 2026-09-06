@@ -58,11 +58,19 @@ class DesktopPetMilestoneConfigurationTest {
         configuration.load(new Entry(behaviors.getDocumentElement()), "DevPet");
         configuration.validate();
 
+        // Assert the production V2 metadata through the source configuration rather than
+        // reaching into Configuration's package-private implementation details.
+        assertEquals("300", namedAttribute(behaviors, "Behavior", "CuriousObservation", "Cooldown"));
+        assertEquals("0.8", namedAttribute(behaviors, "Behavior", "CuriousObservation", "BoredomWeight"));
+
         assertEquals(1, named(actions, "Action", "ClimbWindowSide"));
         assertEquals(1, named(actions, "Action", "HangFromWindowBottom"));
         assertEquals(1, named(actions, "Action", "IncreaseCuriosity"));
         assertEquals(1, named(actions, "Action", "PetResponse"));
-        assertEquals(1, named(actions, "Action", "SayThanks"));
+        assertEquals(1, named(actions, "Action", "SayPetting"));
+        assertEquals(1, named(actions, "Action", "SayCurious"));
+        assertEquals(1, named(actions, "Action", "SayIdle"));
+        assertEquals(1, named(actions, "Action", "SayGreeting"));
         assertEquals(1, named(actions, "Action", "OfferGreeting"));
         assertEquals(1, named(actions, "Action", "AnswerGreeting"));
         assertEquals(1, named(actions, "Hotspot", null));
@@ -72,6 +80,7 @@ class DesktopPetMilestoneConfigurationTest {
         assertEquals(1, named(behaviors, "Behavior", "HangFromWindowBottom"));
         assertEquals(1, named(behaviors, "Behavior", "OfferGreeting"));
         assertEquals(1, named(behaviors, "Behavior", "AnswerGreeting"));
+        assertEquals(1, named(behaviors, "Behavior", "IdleThought"));
     }
 
     private static int named(org.w3c.dom.Document document, String element, String name) {
@@ -84,5 +93,18 @@ class DesktopPetMilestoneConfigurationTest {
             }
         }
         return matches;
+    }
+
+    private static String namedAttribute(org.w3c.dom.Document document, String element, String name, String attribute) {
+        var nodes = document.getElementsByTagNameNS("*", element);
+        for (int i = 0; i < nodes.getLength(); i++) {
+            var attributes = nodes.item(i).getAttributes();
+            var nameAttribute = attributes.getNamedItem("Name");
+            if (nameAttribute != null && name.equals(nameAttribute.getNodeValue())) {
+                var value = attributes.getNamedItem(attribute);
+                return value == null ? null : value.getNodeValue();
+            }
+        }
+        return null;
     }
 }

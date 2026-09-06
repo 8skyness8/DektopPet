@@ -5,6 +5,7 @@ import com.group_finity.mascot.Mascot;
 import com.group_finity.mascot.action.Action;
 import com.group_finity.mascot.behavior.Behavior;
 import com.group_finity.mascot.behavior.UserBehavior;
+import com.group_finity.mascot.behavior.NaturalBehaviorSelector;
 import com.group_finity.mascot.environment.Area;
 import com.group_finity.mascot.script.Variable;
 import com.group_finity.mascot.script.VariableException;
@@ -504,14 +505,17 @@ public class Configuration {
         }
 
         if (totalFrequency > 0) {
-            double random = Math.random() * totalFrequency;
-
-            for (final IBehaviorBuilder behaviorBuilder : candidates) {
-                random -= behaviorBuilder.getFrequency();
-                if (random < 0) {
-                    return behaviorBuilder.buildBehavior();
-                }
-            }
+            List<NaturalBehaviorSelector.Candidate<IBehaviorBuilder>> choices = candidates.stream().map(candidate -> {
+                BehaviorBuilder metadata = behaviorBuilders.get(candidate.getName());
+                return new NaturalBehaviorSelector.Candidate<>(candidate, candidate.getName(), candidate.getFrequency(),
+                        metadata.getCooldown(), metadata.getUtilityWeight(0), metadata.getUtilityWeight(1),
+                        metadata.getUtilityWeight(2), metadata.getUtilityWeight(3), metadata.getUtilityWeight(4),
+                        metadata.getUtilityWeight(5), metadata.getUtilityWeight(6));
+            }).toList();
+            IBehaviorBuilder selected = new NaturalBehaviorSelector().select(choices,
+                    mascot.getNaturalBehaviorState(), mascot.getNaturalBehaviorState().getTicksSinceInteraction() < 75,
+                    mascot.getTotalCount() > 1, java.util.concurrent.ThreadLocalRandom.current());
+            if (selected != null) return selected.buildBehavior();
         }
 
         // If there are no candidates for the next behavior, set the mascot's position

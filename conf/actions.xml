@@ -343,9 +343,21 @@
         <Action Name="IncreaseAffection" Type="Embedded"
                 Class="com.group_finity.mascot.action.IncrementState"
                 StateKey="affection" StateAmount="1" StateMaximum="10"/>
-        <Action Name="SayThanks" Type="Embedded" Class="com.group_finity.mascot.action.Say" Text="Thanks!"/>
-        <Action Name="OfferGreeting" Type="Stay" BorderType="Floor" Affordance="DesktopPetGreeting">
+        <Action Name="SayPetting" Type="Embedded" Class="com.group_finity.mascot.action.Say"
+                Phrases="That was nice.|Hello, friend.|I feel recharged!"/>
+        <Action Name="SayCurious" Type="Embedded" Class="com.group_finity.mascot.action.Say"
+                Phrases="What is over there?|I found a new viewpoint.|Time to explore."/>
+        <Action Name="SayIdle" Type="Embedded" Class="com.group_finity.mascot.action.Say"
+                Phrases="A quiet moment.|Everything looks peaceful."/>
+        <Action Name="SayGreeting" Type="Embedded" Class="com.group_finity.mascot.action.Say"
+                Phrases="Good to see you.|Hello there!"/>
+        <Action Name="GreetingStay" Type="Stay" BorderType="Floor" Affordance="DesktopPetGreeting">
             <Animation><Pose Image="/shime1.png" ImageAnchor="64,128" Velocity="0,0" Duration="75"/></Animation>
+        </Action>
+        <Action Name="OfferGreeting" Type="Sequence" Loop="false">
+            <ActionReference Name="SayGreeting"/>
+            <ActionReference Name="GreetingStay"/>
+            <ActionReference Name="Stand" Duration="30"/>
         </Action>
         <Action Name="AnswerGreeting" Type="Embedded" Class="com.group_finity.mascot.action.ScanInteract"
                 BorderType="Floor" Affordance="DesktopPetGreeting" Behavior="PetResponse"
@@ -355,12 +367,18 @@
         <Action Name="CuriousObservation" Type="Sequence" Loop="false">
             <ActionReference Name="IncreaseCuriosity"/>
             <ActionReference Name="SitAndLookUp" Duration="75"/>
+            <ActionReference Name="SayCurious"/>
         </Action>
         <Action Name="PetResponse" Type="Sequence" Loop="false">
             <ActionReference Name="IncreaseAffection"/>
-            <ActionReference Name="SayThanks"/>
+            <ActionReference Name="SayPetting"/>
             <ActionReference Name="SitAndSpinHeadAction"/>
             <ActionReference Name="Stand" Duration="40"/>
+        </Action>
+        <Action Name="IdleThought" Type="Sequence" Loop="false">
+            <ActionReference Name="Stand" Duration="35"/>
+            <ActionReference Name="SayIdle"/>
+            <ActionReference Name="Stand" Duration="45"/>
         </Action>
         <Action Name="ClimbWindowSide" Type="Sequence" Loop="false">
             <ActionReference Name="ClimbWall" TargetY="#{mascot.anchor.y-80}"/>

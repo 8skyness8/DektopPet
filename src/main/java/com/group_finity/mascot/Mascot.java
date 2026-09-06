@@ -2,6 +2,7 @@ package com.group_finity.mascot;
 
 import com.group_finity.mascot.animation.Animation;
 import com.group_finity.mascot.animation.Hotspot;
+import com.group_finity.mascot.behavior.NaturalBehaviorState;
 import com.group_finity.mascot.behavior.Behavior;
 import com.group_finity.mascot.behavior.BehaviorExecutionException;
 import com.group_finity.mascot.behavior.PersonalityState;
@@ -282,10 +283,16 @@ public class Mascot {
      */
     private Map<String, Object> variables = null;
     private final PersonalityState personalityState = new PersonalityState();
+    private final NaturalBehaviorState naturalBehaviorState = new NaturalBehaviorState();
 
     public PersonalityState getPersonalityState() {
         return personalityState;
     }
+
+    public NaturalBehaviorState getNaturalBehaviorState() { return naturalBehaviorState; }
+
+    /** Script-friendly access to the five bounded V2 needs. */
+    public PersonalityState getNeeds() { return naturalBehaviorState.getNeeds(); }
 
     /**
      * Creates a new {@code Mascot} with the specified image set.
@@ -445,6 +452,7 @@ public class Mascot {
      * @see MouseListener#mousePressed(MouseEvent)
      */
     private void mousePressed(final MouseEvent event) {
+        naturalBehaviorState.interaction(2);
         // Check for popup triggers in both mousePressed and mouseReleased
         // because popup menus are triggered differently on different systems
         if (event.isPopupTrigger()) {
@@ -629,6 +637,7 @@ public class Mascot {
      */
     synchronized void tick() {
         if (isAnimating()) {
+            naturalBehaviorState.advance(1);
             environment.updateWindowTerrain();
             if (behavior != null) {
                 try {
@@ -735,6 +744,8 @@ public class Mascot {
         presentationBubbleTicks = Math.max(1, durationTicks);
         needsRepaint = true;
     }
+
+    public boolean hasPresentationBubble() { return presentationBubbleTicks > 0; }
 
     /** Stable creation-order identifier used only for deterministic coordination. */
     public int getId() {

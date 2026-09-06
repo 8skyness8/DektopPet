@@ -32,4 +32,6 @@ public interface IBehaviorBuilder {
      * @return the frequency of this behavior
      */
     int getFrequency();
+
+    String getName();
 }

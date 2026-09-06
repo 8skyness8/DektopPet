@@ -40,13 +40,15 @@
                 <BehaviorReference Name="StandUp" Frequency="1"/>
             </NextBehaviorList>
         </Behavior>
-        <Behavior Name="OfferGreeting" Frequency="2"/>
-        <Behavior Name="AnswerGreeting" Frequency="2" Condition="#{mascot.totalCount &gt; 1}"/>
+        <Behavior Name="OfferGreeting" Frequency="2" Cooldown="500" SocialWeight="0.8" CompanionNearWeight="1.0"/>
+        <Behavior Name="AnswerGreeting" Frequency="2" Cooldown="500" SocialWeight="0.8" CompanionNearWeight="1.0"
+                  Condition="#{mascot.totalCount &gt; 1}"/>
+        <Behavior Name="IdleThought" Frequency="3" Cooldown="750" BoredomWeight="0.3"/>
 
         <!-- On the Floor -->
         <Condition Condition="#{mascot.environment.floor.isOn(mascot.anchor)}">
             <Behavior Name="StandUp" Frequency="200" Hidden="true"/>
-            <Behavior Name="SitDown" Frequency="200">
+            <Behavior Name="SitDown" Frequency="200" Cooldown="80" EnergyWeight="-0.6">
                 <NextBehaviorList Add="true">
                     <BehaviorReference Name="SitWhileDanglingLegs" Frequency="100"/>
                     <BehaviorReference Name="LieDown" Frequency="100"/>
@@ -64,7 +66,7 @@
             </Behavior>
 
             <Behavior Name="SplitIntoTwo" Frequency="50" Condition="#{mascot.totalCount &lt; 50}"/>
-            <Behavior Name="CuriousObservation" Frequency="15"
+            <Behavior Name="CuriousObservation" Frequency="15" Cooldown="300" BoredomWeight="0.8" CuriosityWeight="0.5" CursorNearWeight="0.4"
                       Condition="${mascot.personalityState.get('curiosity') &lt; 10}"/>
         </Condition>
 
