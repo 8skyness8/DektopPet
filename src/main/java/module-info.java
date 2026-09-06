@@ -20,6 +20,7 @@ module com.group_finity.mascot {
     exports com.group_finity.mascot.image;
     exports com.group_finity.mascot.platform.window;
     exports com.group_finity.mascot.script;
+    exports com.group_finity.mascot.terrain;
 
     // Open JNA packages to JNA
     opens com.group_finity.mascot.platform.mac.jna to com.sun.jna;

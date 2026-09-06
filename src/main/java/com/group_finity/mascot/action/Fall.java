@@ -6,6 +6,8 @@ import com.group_finity.mascot.animation.Animation;
 import com.group_finity.mascot.environment.MascotEnvironment;
 import com.group_finity.mascot.script.VariableException;
 import com.group_finity.mascot.script.VariableMap;
+import com.group_finity.mascot.terrain.WindowLanding;
+import com.group_finity.mascot.terrain.WindowTerrain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,8 +116,8 @@ public class Fall extends ActionBase {
         modY += velocityY % 1;
 
         // Movement amount
-        final int dx = (int) Math.round(velocityX + modX);
-        final int dy = (int) Math.round(velocityY + modY);
+        int dx = (int) Math.round(velocityX + modX);
+        int dy = (int) Math.round(velocityY + modY);
 
         modX %= 1;
         modY %= 1;
@@ -125,6 +127,19 @@ public class Fall extends ActionBase {
         final int anchorX = mascot.getAnchor().x;
         final int anchorY = mascot.getAnchor().y;
         final MascotEnvironment environment = getEnvironment();
+
+        // Discover first, then perform collision entirely against neutral geometry.
+        // Calculating across the whole movement prevents a fast fall tunneling through a window.
+        WindowTerrain terrain = environment.refreshWindowTerrain();
+        int floorY = environment.getWorkArea().getBottom();
+        var landing = WindowLanding.firstLanding(
+                anchorX, anchorY, anchorX + dx, anchorY + dy, terrain, floorY);
+        if (landing.isPresent()) {
+            int landingY = landing.get().y();
+            double progress = (landingY - anchorY) / (double) dy;
+            dx = (int) Math.round(dx * progress);
+            dy = landingY - anchorY;
+        }
 
         OUTER:
         for (int i = 0; i <= dev; i++) {

@@ -50,7 +50,7 @@ owned popups, DesktopPet windows, the shell, disabled windows, and zero-area win
 excluded. This environment cannot perform that native Windows check; all filter rules are
 covered by platform-independent synthetic tests.
 
-### 3. [ ] Pure window terrain / rectangle-edge model
+### 3. [x] Pure window terrain / rectangle-edge model
 
 - Convert discovered window rectangles into a platform-independent terrain model.
   - Represent top, bottom, left, and right edges with deterministic coordinates and a
@@ -60,7 +60,13 @@ covered by platform-independent synthetic tests.
   - Keep all geometry free of JNA and GUI dependencies.
   - Do not connect the terrain to mascot movement in this milestone.
 
-### 4. [ ] Mascot landing on application-window top edges
+The platform-neutral terrain model creates deterministically ordered top, bottom, left,
+and right edges from eligible snapshots, retaining each source window identifier. Pure
+unit tests cover containment, overlap, nearest-edge selection, negative coordinates,
+overlapping windows, ordering, and eligibility filtering. The model itself has no JNA or
+GUI dependencies; its movement integration is introduced separately by milestone 4.
+
+### 4. [x] Mascot landing on application-window top edges
 
 - Allow a falling mascot to land and stand on eligible application-window top
   edges while preserving existing desktop-floor landing behavior.
@@ -69,6 +75,14 @@ covered by platform-independent synthetic tests.
   - Ignore ineligible or stale windows safely.
   - Add non-GUI regression tests for landing calculations and fallback-to-floor cases.
   - Manually verify landing on common applications on Windows 10 or Windows 11.
+
+Falling now uses a pure swept-segment calculation against eligible top-edge terrain,
+selecting the first crossed edge deterministically and retaining the existing work-area
+floor as its fallback. Tests cover fast-fall tunneling, diagonal crossings, deterministic
+overlap resolution, stale/ineligible snapshots, upward movement, and floor fallback.
+Manual verification remains required on Windows 10 and Windows 11 to confirm landing and
+standing on common application windows, including overlapping windows, while ordinary
+desktop-floor landing remains unchanged.
 
 ### 5. [ ] Tracking moved/resized windows
 

@@ -3,6 +3,10 @@ package com.group_finity.mascot.environment;
 import com.group_finity.mascot.Main;
 import com.group_finity.mascot.Mascot;
 import com.group_finity.mascot.platform.NativeFactory;
+import com.group_finity.mascot.platform.window.DesktopWindowInfoFactory;
+import com.group_finity.mascot.platform.window.VisibleWindowDiscovery;
+import com.group_finity.mascot.terrain.EdgeType;
+import com.group_finity.mascot.terrain.WindowTerrain;
 
 import java.awt.*;
 
@@ -23,6 +27,11 @@ public class MascotEnvironment {
      * The {@link Mascot} associated with this {@code MascotEnvironment}.
      */
     private final Mascot mascot;
+
+    private final VisibleWindowDiscovery visibleWindowDiscovery =
+            new VisibleWindowDiscovery(DesktopWindowInfoFactory.create());
+
+    private WindowTerrain windowTerrain = WindowTerrain.EMPTY;
 
     /**
      * The work area containing this environment's {@link Mascot}.
@@ -212,6 +221,12 @@ public class MascotEnvironment {
     public Border getFloor(boolean ignoreSeparator) {
         Point anchor = mascot.getAnchor();
 
+        for (var edge : windowTerrain.edges(EdgeType.TOP)) {
+            if (edge.contains(anchor)) {
+                return new WindowTopBorder(edge);
+            }
+        }
+
         Area activeIe = getActiveIE();
         Border activeIeBorder = activeIe.getTopBorder();
         if (activeIeBorder.isOn(anchor)) {
@@ -227,6 +242,15 @@ public class MascotEnvironment {
         }
 
         return NotOnBorder.INSTANCE;
+    }
+
+    /**
+     * Takes a new eligible-window snapshot and converts it to geometry before physics uses it.
+     * Native window objects never escape the platform information implementation.
+     */
+    public WindowTerrain refreshWindowTerrain() {
+        windowTerrain = WindowTerrain.fromSnapshots(visibleWindowDiscovery.discover());
+        return windowTerrain;
     }
 
     /**
