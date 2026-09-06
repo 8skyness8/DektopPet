@@ -22,11 +22,13 @@
             <outputDirectory>.</outputDirectory>
             <includes>
                 <include>DesktopPet</include>
+                <include>Start-DesktopPet.cmd</include>
                 <include>LICENSE.txt</include>
                 <include>originalreadme.txt</include>
                 <include>readme.txt</include>
                 <include>changelog.txt</include>
                 <include>kilkakon.txt</include>
+                <include>docs/WINDOWS_RELEASE_SMOKE_TEST.md</include>
                 <include>img/**</include>
                 <include>conf/**</include>
             </includes>

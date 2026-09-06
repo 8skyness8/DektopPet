@@ -42,6 +42,8 @@
         </Behavior>
         <Behavior Name="ClimbWindowSide" Frequency="0" Hidden="true"/>
         <Behavior Name="HangFromWindowBottom" Frequency="0" Hidden="true"/>
+        <Behavior Name="OfferGreeting" Frequency="2"/>
+        <Behavior Name="AnswerGreeting" Frequency="2" Condition="#{mascot.totalCount &gt; 1}"/>
 
         <!-- On the Floor -->
         <Condition Condition="#{mascot.environment.floor.isOn(mascot.anchor)}">

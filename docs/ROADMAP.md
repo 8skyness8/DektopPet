@@ -132,24 +132,40 @@ A head hotspot uses the existing primary-button hotspot mechanism to select a co
 pet response: affection increments, the mascot spins its head, and then returns to standing.
 Manual input and animation checks are listed in the Windows smoke-test document.
 
-### 9. [ ] Lightweight bubbles, sounds, and presentation
+### 9. [x] Lightweight bubbles, sounds, and presentation
 
 - Add one lightweight, optional presentation increment that respects mute/settings,
   uses original or compatibly licensed content, and does not obstruct desktop use.
 
-### 10. [ ] Multiple-pet interactions
+The generic `Say` action displays short configuration-owned text inside the existing pet
+window. It is opt-in through `PresentationBubbles=false`, creates no additional input
+surface, and the DevPet petting response uses the original text “Thanks!”.
+
+### 10. [x] Multiple-pet interactions
 
 - Add one bounded interaction between multiple pets with deterministic coordination
   logic, safe behavior when a participant disappears, and non-GUI tests where feasible.
 
-### 11. [ ] Settings, display handling, persistence, and product quality
+Two pets can occasionally offer and answer a greeting through the existing affordance
+actions. Pure coordination chooses the nearest participant with creation order as its
+tie-breaker; weak target references and per-tick validation safely handle removal.
+
+### 11. [x] Settings, display handling, persistence, and product quality
 
 - Improve one cohesive product-quality area spanning settings/persistence or
   multi-monitor/fullscreen handling, preserving backward-compatible defaults and
   documenting Windows 10/11 manual checks.
 
-### 12. [ ] Packaging, productization, and eventual Steam integration
+Settings saves now use a same-directory temporary file and atomic replacement when the
+filesystem supports it, create missing parent directories, and discard stale properties
+on reload. Existing defaults are unchanged and the new presentation option defaults off.
+
+### 12. [x] Packaging, productization, and eventual Steam integration
 
 - Define and implement one self-contained packaging/productization increment toward
   a distributable Windows application; treat Steam integration as an eventual follow-up
   requiring its own explicit requirements and credentials-free validation.
+
+The existing ZIP distribution now includes a working-directory-safe Windows launcher and
+the release smoke-test guide. Steam integration remains a credentials-free documented
+future follow-up; no SDK, store API, account, telemetry, or online service was added.

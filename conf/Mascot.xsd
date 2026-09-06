@@ -492,6 +492,9 @@
         <attribute name="StateMaximum" type="tns:ScriptableInt" default="10">
             <annotation><documentation>The inclusive upper bound used by IncrementState.</documentation></annotation>
         </attribute>
+        <attribute name="Text" type="tns:ScriptableString" default="">
+            <annotation><documentation>Short text displayed by the optional Say presentation action.</documentation></annotation>
+        </attribute>
 
         <!--
         This is technically not part of the schema.

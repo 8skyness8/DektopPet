@@ -18,9 +18,14 @@ class DesktopPetMilestoneConfigurationTest {
         assertEquals(1, named(actions, "Action", "HangFromWindowBottom"));
         assertEquals(1, named(actions, "Action", "IncreaseCuriosity"));
         assertEquals(1, named(actions, "Action", "PetResponse"));
+        assertEquals(1, named(actions, "Action", "SayThanks"));
+        assertEquals(1, named(actions, "Action", "OfferGreeting"));
+        assertEquals(1, named(actions, "Action", "AnswerGreeting"));
         assertEquals(1, named(actions, "Hotspot", null));
         assertEquals(1, named(behaviors, "Behavior", "CuriousObservation"));
         assertEquals(1, named(behaviors, "Behavior", "PetResponse"));
+        assertEquals(1, named(behaviors, "Behavior", "OfferGreeting"));
+        assertEquals(1, named(behaviors, "Behavior", "AnswerGreeting"));
     }
 
     private static int named(org.w3c.dom.Document document, String element, String name) {
