@@ -162,15 +162,43 @@ Delete the unzipped folder.
 
 ## Building
 
-1. Download the source code. This can be done by either downloading a ZIP file containing the source or using Git to
-   clone the repository to your computer. Both options are available through the green "Code" button at the top of the
-   GitHub page. Git is recommended if you plan to contribute changes to this repository.
-2. Install Java 25 or newer.
-3. Install [IntelliJ IDEA Community Edition](https://www.jetbrains.com/idea/download/).
-4. Open the source code directory in the IDE.
-5. Open the Maven tool window on the right side of the UI. The icon to open the window should look like an "m".
-6. Right-click the "Shimeji-ee" item and select "Run Maven build". This will build the project and output the files to
-   the `target/` directory. The distributable file should be a ZIP file named `Shimeji-ee_[version].zip`.
+The upstream Windows build baseline uses a 64-bit JDK 25 and Maven 3.9. The JDK, rather than a JRE, is required both to
+compile the project and by the generated Windows launcher.
+
+From PowerShell or Command Prompt in the repository root, confirm the active tools and run the Maven verification path:
+
+```text
+java -version
+mvn -version
+mvn clean verify
+```
+
+`mvn clean verify` compiles the application, runs its automated tests, creates the executable launcher, and assembles
+the distribution. A successful build produces these launchable artifacts:
+
+* `target/Shimeji-ee.jar`
+* `target/Shimeji-ee.exe`
+* `target/Shimeji-ee_1.0.22.zip` (the distributable archive, including the runtime dependencies and configuration)
+
+The version in the ZIP filename follows the project version in `pom.xml` and will change when the project version is
+updated. Do not move the JAR or EXE out of the extracted distribution: the `lib`, `conf`, and `img` directories are
+required at runtime.
+
+### Windows baseline smoke check
+
+On Windows 10 or Windows 11 with `JAVA_HOME` set to the JDK 25 installation:
+
+1. Extract `target/Shimeji-ee_1.0.22.zip` to a writable directory.
+2. Start `Shimeji-ee.exe`. If launcher diagnostics are needed, run `java -jar Shimeji-ee.jar` from a terminal in the
+   same directory instead.
+3. Confirm the tray icon appears and the bundled mascot appears on the desktop.
+4. Confirm the mascot can be dragged and released.
+5. Right-click the tray icon and choose **Dismiss All**; confirm the mascot and application exit.
+
+These GUI checks require an interactive Windows desktop and are not covered by a headless Maven build.
+
+IntelliJ IDEA is optional. If using it, open this directory as a Maven project and run the Maven `verify` lifecycle
+goal; the outputs are the same files under `target/`.
 
 ## Licensing
 
