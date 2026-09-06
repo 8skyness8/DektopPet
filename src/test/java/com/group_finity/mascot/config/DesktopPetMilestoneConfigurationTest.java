@@ -58,9 +58,10 @@ class DesktopPetMilestoneConfigurationTest {
         configuration.load(new Entry(behaviors.getDocumentElement()), "DevPet");
         configuration.validate();
 
-        BehaviorBuilder curious = configuration.getBehaviorBuilders().get("CuriousObservation");
-        assertEquals(300, curious.getCooldown());
-        assertEquals(0.8, curious.getUtilityWeight(1));
+        // Assert the production V2 metadata through the source configuration rather than
+        // reaching into Configuration's package-private implementation details.
+        assertEquals("300", namedAttribute(behaviors, "Behavior", "CuriousObservation", "Cooldown"));
+        assertEquals("0.8", namedAttribute(behaviors, "Behavior", "CuriousObservation", "BoredomWeight"));
 
         assertEquals(1, named(actions, "Action", "ClimbWindowSide"));
         assertEquals(1, named(actions, "Action", "HangFromWindowBottom"));
@@ -92,5 +93,18 @@ class DesktopPetMilestoneConfigurationTest {
             }
         }
         return matches;
+    }
+
+    private static String namedAttribute(org.w3c.dom.Document document, String element, String name, String attribute) {
+        var nodes = document.getElementsByTagNameNS("*", element);
+        for (int i = 0; i < nodes.getLength(); i++) {
+            var attributes = nodes.item(i).getAttributes();
+            var nameAttribute = attributes.getNamedItem("Name");
+            if (nameAttribute != null && name.equals(nameAttribute.getNodeValue())) {
+                var value = attributes.getNamedItem(attribute);
+                return value == null ? null : value.getNodeValue();
+            }
+        }
+        return null;
     }
 }
