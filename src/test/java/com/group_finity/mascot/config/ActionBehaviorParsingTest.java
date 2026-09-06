@@ -45,7 +45,7 @@ class ActionBehaviorParsingTest {
     @Test
     void behaviorConditionIsParsedAndEvaluated() throws Exception {
         BehaviorBuilder behavior = new BehaviorBuilder(configuration,
-                EntryTest.entry("<Behavior Name=\"Stand\" Frequency=\"1\" Condition=\"1 &lt; 2\"/>"), List.of());
+                EntryTest.entry("<Behavior Name=\"Stand\" Frequency=\"1\" Condition=\"${1 &lt; 2}\"/>"), List.of());
 
         assertTrue(behavior.isEffective(new VariableMap()));
     }
