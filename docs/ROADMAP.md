@@ -16,7 +16,7 @@ it complete in the same pull request after every acceptance criterion is satisfi
 
 ## Future milestones
 
-### 1. [ ] Windows integration abstraction for desktop/window information
+### 1. [x] Windows integration abstraction for desktop/window information
 
 - Introduce a platform-neutral interface for reading desktop bounds, work-area
   bounds, and top-level window snapshots without exposing JNA types to callers.
@@ -27,6 +27,12 @@ it complete in the same pull request after every acceptance criterion is satisfi
   - Route no mascot behavior to the new API yet.
   - Add non-GUI unit tests for the model and for mapping/filter-independent logic.
   - Document any Windows behavior that still requires manual verification.
+
+Manual verification remains required on Windows 10 and Windows 11 to confirm that the
+virtual-desktop and primary work-area coordinates reflect mixed-DPI, taskbar, and
+negative-coordinate multi-monitor layouts, and that enumerated window titles, bounds,
+visibility, and minimized state agree with representative native applications. The new
+API is not used by mascot behavior yet, as required by this milestone.
 
 ### 2. [ ] Visible top-level window discovery and filtering
 
