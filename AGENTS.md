@@ -62,6 +62,21 @@ contents; request the full issue and acceptance criteria instead. Implement exac
 roadmap milestone per task and pull request unless the user explicitly asks for more. Do
 not invent new roadmap work after every roadmap milestone is complete.
 
+### Batch roadmap work
+
+When the user explicitly authorizes multiple consecutive roadmap milestones in one task,
+treat that requested batch as one task while preserving each milestone's acceptance
+criteria separately.
+
+- Implement only the requested number of consecutive incomplete milestones, in roadmap
+  order.
+- Mark each milestone complete only after all of its own acceptance criteria are met.
+- If a later milestone cannot be implemented safely because an earlier milestone exposes
+  an architectural or verification problem, stop at the last safely completed milestone
+  and report why.
+- If any milestone in the batch requires manual review before merge, the whole pull
+  request requires manual review.
+
 ## Required validation
 
 For ordinary code changes, use the repository's Maven build and test workflow.
@@ -74,27 +89,67 @@ At minimum, attempt:
 If the repository's effective build uses a different Maven goal, inspect pom.xml and
 use the project's configured verification path instead of guessing.
 
-Do not claim a test passed unless it was actually executed successfully.
+Do not claim a test passed unless it was actually executed successfully. A Codex/local
+environment failure caused only by blocked Maven Central access may be reported as an
+environment limitation; the Windows pull-request CI remains the authoritative hosted
+build/test gate.
+
+## Pull request automation contract
+
+Every Codex pull request must include exactly one of these standalone lines in its body:
+
+    Automation: auto-merge
+
+or
+
+    Automation: manual-review
+
+Use `Automation: auto-merge` only when all acceptance criteria required before merge can
+be validated by automated tests/CI and any remaining manual Windows checks are explicitly
+non-blocking documentation/follow-up checks. Use `Automation: manual-review` when the task
+requires human verification before merge, changes user-visible GUI/input/animation or
+runtime behavior that is not adequately covered by tests, has unresolved uncertainty,
+or explicitly calls for a manual Windows check before completion.
+
+When uncertain, choose `Automation: manual-review`.
+
+A pull request marked `Automation: auto-merge` is eligible for repository automation only
+when all of the following are true:
+
+- it targets `main`;
+- it comes from a branch in this repository whose name starts with `codex/`;
+- it is not a draft;
+- the `Validate pull requests` workflow succeeds for the exact current head commit;
+- it is not also marked `Automation: manual-review`;
+- it does not carry a `manual-review` label.
+
+The auto-merge workflow must never check out or execute untrusted pull-request code with a
+write-capable token. It may merge only the exact commit SHA that successfully completed
+the validation workflow. CI failure, a newer unvalidated commit, missing automation
+marker, draft state, forked PR, or manual-review marker/label must leave the PR unmerged.
 
 ## Autonomous task loop
 
 For each task:
 
-1. Select exactly one task using the priority above.
+1. Select exactly one task using the priority above. An explicitly authorized batch of
+   consecutive roadmap milestones counts as one task.
 2. Inspect the relevant existing code, configuration, and tests.
-3. Restate the selected milestone and its acceptance criteria.
+3. Restate the selected milestone(s) and acceptance criteria.
 4. Implement only the requested scope.
 5. Add/update tests where appropriate.
 6. Run `mvn test` and `mvn clean verify` when applicable.
 7. Review the diff for unrelated changes.
-8. If the task is a roadmap milestone, mark it complete in `docs/ROADMAP.md` in the same
-   pull request once all of its acceptance criteria are satisfied.
-9. Report:
-   - implementation summary
-   - files changed
-   - tests/build commands run
-   - results
-   - remaining manual Windows checks and other limitations, if any
+8. If the task contains roadmap milestones, mark each completed milestone in
+   `docs/ROADMAP.md` in the same pull request only after its criteria are satisfied.
+9. Decide the PR automation marker using the policy above and include it in the PR body.
+10. Report:
+    - implementation summary
+    - files changed
+    - tests/build commands run
+    - results
+    - PR automation marker selected and why
+    - remaining manual Windows checks and other limitations, if any
 
 ## Architecture direction
 
