@@ -1,0 +1,111 @@
+# DesktopPet roadmap
+
+This file is DesktopPet's repository-local fallback task source. GitHub Issues remain
+supported and take priority when their full requirements are available, as described in
+[`AGENTS.md`](../AGENTS.md). When roadmap-driven work is authorized, select the first
+incomplete milestone below and implement only that milestone in one pull request. Mark
+it complete in the same pull request after every acceptance criterion is satisfied.
+
+## Completed foundation
+
+- [x] Reproducible Windows Maven build.
+- [x] DesktopPet branding.
+- [x] Original DevPet development mascot.
+- [x] JUnit 5 test foundation.
+- [x] Windows pull-request CI using `mvn --batch-mode clean verify`.
+
+## Future milestones
+
+### 1. [ ] Windows integration abstraction for desktop/window information
+
+- Introduce a platform-neutral interface for reading desktop bounds, work-area
+  bounds, and top-level window snapshots without exposing JNA types to callers.
+  - Define an immutable window snapshot containing a stable native identifier, bounds,
+    title, visibility, and minimized state.
+  - Add a Windows implementation that maps existing JNA calls into the neutral model;
+    retain a safe non-Windows implementation so startup remains cross-platform.
+  - Route no mascot behavior to the new API yet.
+  - Add non-GUI unit tests for the model and for mapping/filter-independent logic.
+  - Document any Windows behavior that still requires manual verification.
+
+### 2. [ ] Visible top-level window discovery and filtering
+
+- Discover application windows through the abstraction and return only usable,
+  visible top-level windows.
+  - Exclude minimized, cloaked, zero-area, tool/owned, DesktopPet-owned, shell, and
+    otherwise non-interactive windows using explicitly documented filter rules.
+  - Keep discovery/filter logic separate from mascot behavior and terrain generation.
+  - Add unit tests for every filter rule using synthetic snapshots.
+  - Manually verify representative Windows 10 or Windows 11 applications when possible.
+
+### 3. [ ] Pure window terrain / rectangle-edge model
+
+- Convert discovered window rectangles into a platform-independent terrain model.
+  - Represent top, bottom, left, and right edges with deterministic coordinates and a
+    link to the source window identifier.
+  - Define and test edge containment, nearest-edge lookup, overlap, and ordering rules,
+    including negative desktop coordinates and overlapping windows.
+  - Keep all geometry free of JNA and GUI dependencies.
+  - Do not connect the terrain to mascot movement in this milestone.
+
+### 4. [ ] Mascot landing on application-window top edges
+
+- Allow a falling mascot to land and stand on eligible application-window top
+  edges while preserving existing desktop-floor landing behavior.
+  - Use the terrain model rather than direct native-window calls in physics code.
+  - Choose the first crossed top edge deterministically and prevent tunneling through it.
+  - Ignore ineligible or stale windows safely.
+  - Add non-GUI regression tests for landing calculations and fallback-to-floor cases.
+  - Manually verify landing on common applications on Windows 10 or Windows 11.
+
+### 5. [ ] Tracking moved/resized windows
+
+- Keep occupied window terrain synchronized when its source window moves, resizes,
+  minimizes, closes, or changes eligibility.
+  - Refresh snapshots at a bounded rate without blocking the mascot update loop.
+  - Carry a standing mascot with a moved/resized supporting top edge when valid, and
+    make it fall safely when support disappears.
+  - Add deterministic tests for snapshot changes and support invalidation.
+  - Document and manually check responsiveness and resource usage on Windows.
+
+### 6. [ ] Side/ceiling interactions such as climbing/hanging
+
+- Add configuration-driven mascot interactions with application-window side and
+  bottom edges.
+  - Extend terrain queries so behavior code can distinguish top, side, and bottom edges.
+  - Provide at least one climb transition and one hang transition using existing action
+    and behavior mechanisms rather than character-specific Java logic.
+  - Preserve ordinary screen-edge interactions when no window edge is eligible.
+  - Test pure edge selection and transition preconditions; list manual animation checks.
+
+### 7. [ ] Richer behavior, state, and personality
+
+- Add a small, configuration-driven personality/state increment with deterministic
+  non-GUI tests where feasible and no character-specific engine coupling.
+
+### 8. [ ] Direct user interaction
+
+- Add one focused interaction such as clicking or petting, including clear input
+  behavior, configuration-driven mascot response, and manual GUI verification steps.
+
+### 9. [ ] Lightweight bubbles, sounds, and presentation
+
+- Add one lightweight, optional presentation increment that respects mute/settings,
+  uses original or compatibly licensed content, and does not obstruct desktop use.
+
+### 10. [ ] Multiple-pet interactions
+
+- Add one bounded interaction between multiple pets with deterministic coordination
+  logic, safe behavior when a participant disappears, and non-GUI tests where feasible.
+
+### 11. [ ] Settings, display handling, persistence, and product quality
+
+- Improve one cohesive product-quality area spanning settings/persistence or
+  multi-monitor/fullscreen handling, preserving backward-compatible defaults and
+  documenting Windows 10/11 manual checks.
+
+### 12. [ ] Packaging, productization, and eventual Steam integration
+
+- Define and implement one self-contained packaging/productization increment toward
+  a distributable Windows application; treat Steam integration as an eventual follow-up
+  requiring its own explicit requirements and credentials-free validation.
