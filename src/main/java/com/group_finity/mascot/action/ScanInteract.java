@@ -70,7 +70,7 @@ public class ScanInteract extends BorderedAction {
         // refresh target
         Mascot targetMascot = target == null ? null : target.get();
         if (getMascot().getManager() != null && (targetMascot == null || !targetMascot.getAffordances().contains(getAffordance()))) {
-            target = getMascot().getManager().getMascotWithAffordance(getAffordance());
+            target = getMascot().getManager().getMascotWithAffordance(getMascot(), getAffordance());
             targetMascot = target == null ? null : target.get();
         }
         putVariable(getSchema().getString("TargetX"), targetMascot != null ? targetMascot.getAnchor().x : null);

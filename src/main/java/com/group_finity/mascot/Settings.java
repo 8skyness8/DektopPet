@@ -34,6 +34,7 @@ public class Settings {
     public boolean transformation = true;
     public boolean throwing = true;
     public boolean sounds = true;
+    public boolean presentationBubbles = false;
     public boolean multiscreen = true;
 
     public boolean showTrayIcon = true;
@@ -59,6 +60,7 @@ public class Settings {
      * @param path the path from which to load the settings
      */
     public void load(Path path) {
+        properties.clear();
         if (Files.isRegularFile(path)) {
             try (InputStream input = Files.newInputStream(path)) {
                 properties.load(input);
@@ -91,6 +93,7 @@ public class Settings {
         transformation = getBooleanProperty(properties, "Transformation", true);
         throwing = getBooleanProperty(properties, "Throwing", true);
         sounds = getBooleanProperty(properties, "Sounds", true);
+        presentationBubbles = getBooleanProperty(properties, "PresentationBubbles", false);
         multiscreen = getBooleanProperty(properties, "Multiscreen", true);
 
         // General settings
@@ -218,6 +221,7 @@ public class Settings {
         properties.setProperty("Transformation", String.valueOf(transformation));
         properties.setProperty("Throwing", String.valueOf(throwing));
         properties.setProperty("Sounds", String.valueOf(sounds));
+        properties.setProperty("PresentationBubbles", String.valueOf(presentationBubbles));
         properties.setProperty("Multiscreen", String.valueOf(multiscreen));
 
         // General settings
@@ -259,10 +263,27 @@ public class Settings {
         }
         properties.setProperty("BackgroundImage", backgroundImage == null ? "" : backgroundImage.toString());
 
-        try (OutputStream output = Files.newOutputStream(path)) {
-            properties.store(output, "DesktopPet Configuration Options");
+        Path target = path.toAbsolutePath();
+        Path parent = target.getParent();
+        Path temporary = parent.resolve(path.getFileName() + ".tmp");
+        try {
+            Files.createDirectories(parent);
+            try (OutputStream output = Files.newOutputStream(temporary)) {
+                properties.store(output, "DesktopPet Configuration Options");
+            }
+            try {
+                Files.move(temporary, target, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            } catch (java.nio.file.AtomicMoveNotSupportedException ignored) {
+                Files.move(temporary, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
             log.error("Failed to save settings", e);
+            try {
+                Files.deleteIfExists(temporary);
+            } catch (IOException cleanupError) {
+                log.debug("Failed to remove temporary settings file", cleanupError);
+            }
         }
     }
 }

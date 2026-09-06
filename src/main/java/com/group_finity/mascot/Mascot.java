@@ -190,6 +190,8 @@ public class Mascot {
      * @see #setSound(String)
      */
     private String sound = null;
+    private String presentationBubble;
+    private int presentationBubbleTicks;
 
     /**
      * The debug window that displays information about this {@code Mascot} and its environment.
@@ -399,6 +401,15 @@ public class Mascot {
                             g.drawLine(imageAnchor.x - 10, imageAnchor.y - 10, imageAnchor.x + 10, imageAnchor.y + 10);
                             g.drawLine(imageAnchor.x - 10, imageAnchor.y + 10, imageAnchor.x + 10, imageAnchor.y - 10);
                         }
+                    }
+                    String bubble = presentationBubble;
+                    if (bubble != null && Main.getInstance().getSettings().presentationBubbles) {
+                        FontMetrics metrics = g.getFontMetrics();
+                        int width = Math.min(getWidth() - 8, metrics.stringWidth(bubble) + 12);
+                        g.setColor(new Color(255, 255, 255, 230));
+                        g.fillRoundRect(4, 4, width, metrics.getHeight() + 6, 12, 12);
+                        g.setColor(Color.DARK_GRAY);
+                        g.drawString(bubble, 10, metrics.getAscent() + 7);
                     }
                 }
             };
@@ -667,6 +678,10 @@ public class Mascot {
      * {@code null} and refers to a sound clip that is not already playing.
      */
     public void apply() {
+        if (presentationBubbleTicks > 0 && --presentationBubbleTicks == 0) {
+            presentationBubble = null;
+            needsRepaint = true;
+        }
         // Make sure to repaint the mascot if the Draw Shimeji Bounds setting has changed since the last tick
         boolean drawShimejiBounds = Main.getInstance().getSettings().drawShimejiBounds;
         if (prevDrawShimejiBounds != drawShimejiBounds)
@@ -712,6 +727,18 @@ public class Mascot {
                 clip.start();
             }
         }
+    }
+
+    /** Shows bounded presentation text without creating another desktop window. */
+    public void showPresentationBubble(String text, int durationTicks) {
+        presentationBubble = text.length() > 24 ? text.substring(0, 24) : text;
+        presentationBubbleTicks = Math.max(1, durationTicks);
+        needsRepaint = true;
+    }
+
+    /** Stable creation-order identifier used only for deterministic coordination. */
+    public int getId() {
+        return id;
     }
 
     /**

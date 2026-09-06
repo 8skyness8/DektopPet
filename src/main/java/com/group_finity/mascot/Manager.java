@@ -4,6 +4,7 @@ import com.group_finity.mascot.behavior.BehaviorExecutionException;
 import com.group_finity.mascot.config.BehaviorInstantiationException;
 import com.group_finity.mascot.config.Configuration;
 import com.group_finity.mascot.platform.NativeFactory;
+import com.group_finity.mascot.interaction.InteractionCoordinator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -556,20 +557,22 @@ public class Manager {
      * or {@code null} if none was found
      */
     public WeakReference<Mascot> getMascotWithAffordance(String affordance) {
+        return getMascotWithAffordance(null, affordance);
+    }
+
+    /** Selects the nearest broadcaster, breaking equal-distance ties by creation order. */
+    public WeakReference<Mascot> getMascotWithAffordance(Mascot requester, String affordance) {
         mascotLock.readLock().lock();
         try {
-            if (!mascots.isEmpty()) {
-                for (final Mascot mascot : mascots) {
-                    if (mascot.getAffordances().contains(affordance)) {
-                        return new WeakReference<>(mascot);
-                    }
-                }
-            }
+            List<Mascot> candidates = mascots.stream()
+                    .filter(mascot -> mascot.getAffordances().contains(affordance)).toList();
+            if (requester == null)
+                return candidates.isEmpty() ? null : new WeakReference<>(candidates.getFirst());
+            return InteractionCoordinator.nearest(requester, candidates, Mascot::getAnchor, Mascot::getId)
+                    .map(WeakReference::new).orElse(null);
         } finally {
             mascotLock.readLock().unlock();
         }
-
-        return null;
     }
 
     /**
