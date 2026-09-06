@@ -34,7 +34,7 @@ negative-coordinate multi-monitor layouts, and that enumerated window titles, bo
 visibility, and minimized state agree with representative native applications. The new
 API is not used by mascot behavior yet, as required by this milestone.
 
-### 2. [ ] Visible top-level window discovery and filtering
+### 2. [x] Visible top-level window discovery and filtering
 
 - Discover application windows through the abstraction and return only usable,
   visible top-level windows.
@@ -43,6 +43,12 @@ API is not used by mascot behavior yet, as required by this milestone.
   - Keep discovery/filter logic separate from mascot behavior and terrain generation.
   - Add unit tests for every filter rule using synthetic snapshots.
   - Manually verify representative Windows 10 or Windows 11 applications when possible.
+
+Manual verification remains required on Windows 10 and Windows 11. Confirm that common
+applications are returned while minimized applications, UWP/cloaked windows, tool and
+owned popups, DesktopPet windows, the shell, disabled windows, and zero-area windows are
+excluded. This environment cannot perform that native Windows check; all filter rules are
+covered by platform-independent synthetic tests.
 
 ### 3. [ ] Pure window terrain / rectangle-edge model
 

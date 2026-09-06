@@ -1,6 +1,7 @@
 package com.group_finity.mascot.platform.win.jna;
 
 import com.sun.jna.Native;
+import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.win32.StdCallLibrary;
 import com.sun.jna.win32.W32APIOptions;
@@ -31,4 +32,14 @@ public interface User32Extra extends StdCallLibrary {
      * @return If the window is zoomed, the return value is true.
      */
     boolean IsZoomed(HWND hWnd);
+
+    boolean IsWindowEnabled(HWND hWnd);
+
+    HWND GetWindow(HWND hWnd, int command);
+
+    int GetWindowLong(HWND hWnd, int index);
+
+    int GetWindowThreadProcessId(HWND hWnd, IntByReference processId);
+
+    HWND GetShellWindow();
 }
