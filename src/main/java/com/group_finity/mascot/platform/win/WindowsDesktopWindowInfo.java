@@ -1,5 +1,6 @@
 package com.group_finity.mascot.platform.win;
 
+import com.group_finity.mascot.platform.win.jna.Dwmapi;
 import com.group_finity.mascot.platform.win.jna.User32Extra;
 import com.group_finity.mascot.platform.window.Bounds;
 import com.group_finity.mascot.platform.window.DesktopWindowInfo;
@@ -12,7 +13,9 @@ import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.POINT;
 import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinError;
+import com.sun.jna.platform.win32.VersionHelpers;
 import com.sun.jna.platform.win32.WinUser.MONITORINFO;
+import com.sun.jna.ptr.IntByReference;
 
 import java.awt.Rectangle;
 import java.util.ArrayList;
@@ -20,6 +23,10 @@ import java.util.List;
 
 /** Windows/JNA implementation of platform-neutral desktop and window discovery. */
 public final class WindowsDesktopWindowInfo implements DesktopWindowInfo {
+    private static final int GW_OWNER = 4;
+    private static final int GWL_EXSTYLE = -20;
+    private static final int WS_EX_TOOLWINDOW = 0x00000080;
+
     @Override
     public Bounds getDesktopBounds() {
         int x = User32.INSTANCE.GetSystemMetrics(User32.SM_XVIRTUALSCREEN);
@@ -68,9 +75,27 @@ public final class WindowsDesktopWindowInfo implements DesktopWindowInfo {
             return null;
         }
         long identifier = Pointer.nativeValue(window.getPointer());
+        int extendedStyle = User32Extra.INSTANCE.GetWindowLong(window, GWL_EXSTYLE);
+        IntByReference processId = new IntByReference();
+        User32Extra.INSTANCE.GetWindowThreadProcessId(window, processId);
+        boolean desktopPetOwned = Integer.toUnsignedLong(processId.getValue()) == ProcessHandle.current().pid();
+        HWND shellWindow = User32Extra.INSTANCE.GetShellWindow();
         return WindowSnapshotMapper.map(identifier, rectangle.x, rectangle.y,
                 rectangle.x + rectangle.width, rectangle.y + rectangle.height,
                 WindowUtils.getWindowTitle(window), User32.INSTANCE.IsWindowVisible(window),
-                User32Extra.INSTANCE.IsIconic(window));
+                User32Extra.INSTANCE.IsIconic(window), isCloaked(window),
+                (extendedStyle & WS_EX_TOOLWINDOW) != 0,
+                User32Extra.INSTANCE.GetWindow(window, GW_OWNER) != null,
+                desktopPetOwned, window.equals(shellWindow),
+                User32Extra.INSTANCE.IsWindowEnabled(window));
+    }
+
+    private static boolean isCloaked(HWND window) {
+        if (!VersionHelpers.IsWindows8OrGreater()) {
+            return false;
+        }
+        IntByReference value = new IntByReference();
+        return Dwmapi.INSTANCE.DwmGetWindowAttribute(window, Dwmapi.DWMWA_CLOAKED,
+                value.getPointer(), Integer.BYTES).equals(WinError.S_OK) && value.getValue() != 0;
     }
 }
