@@ -12,6 +12,7 @@ var DesktopPet=(function () {
     }catch(e){}
   }
   function saveSettings(){try{var h=fso.CreateTextFile(settingsPath,true,false);h.Write("terrainBridge="+settings.terrainBridge+"\r\nwalking="+settings.walking+"\r\nspeech="+settings.speech+"\r\ndebug="+settings.debug+"\r\n");h.Close();}catch(e){}}
+  function screenBounds(){return {left:0,top:0,right:screen.availWidth,bottom:screen.availHeight};}
   function start(){
     fso=new ActiveXObject("Scripting.FileSystemObject");loadSettings();
     var title="DesktopPet Internal "+(new Date()).getTime()+"_"+Math.floor(Math.random()*100000);document.title=title;
@@ -21,9 +22,9 @@ var DesktopPet=(function () {
     TerrainBridge.start(title,settings.terrainBridge);lastTick=(new Date()).getTime();timer=window.setInterval(tick,33);
   }
   function tick(){
-    var now=(new Date()).getTime(),dt=Math.min(0.1,(now-lastTick)/1000);lastTick=now;
-    if(now-lastTerrain>=400){bridgeInfo=TerrainBridge.poll();surfaces=TerrainModel.parse(bridgeInfo.text,bridgeInfo.hwnd,COLLISION_RIGHT-COLLISION_LEFT);lastTerrain=now;}
-    if(!state.dragging){PetPhysics.step(state,surfaces,dt,{left:0,right:screen.availWidth,bottom:screen.availHeight},settings.walking);window.moveTo(Math.round(state.x),Math.round(state.y));}
+    var now=(new Date()).getTime(),dt=Math.min(0.1,(now-lastTick)/1000);lastTick=now,bounds=screenBounds();
+    if(now-lastTerrain>=400){bridgeInfo=TerrainBridge.poll();surfaces=TerrainModel.parse(bridgeInfo.text,bridgeInfo.hwnd,COLLISION_RIGHT-COLLISION_LEFT,bounds);lastTerrain=now;}
+    if(!state.dragging){PetPhysics.step(state,surfaces,dt,bounds,settings.walking);window.moveTo(Math.round(state.x),Math.round(state.y));}
     renderDebug();
   }
   function shortTitle(value){value=String(value||"");return value.length>24?value.substr(0,21)+"...":value;}
