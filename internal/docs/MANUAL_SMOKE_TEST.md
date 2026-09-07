@@ -2,7 +2,10 @@
 
 Run this test on the confirmed corporate Windows 10/11 PC from a writable local copy of the complete `internal/` directory. Do not change execution policy or elevate. The expected bridge refresh is about 400 ms, and shutdown can take slightly longer than one refresh.
 
+The first corporate test exposed an older .NET Framework C# compiler rule that rejects reuse of a delegate parameter name in an enclosing method scope. The bridge now uses distinct descriptive names throughout its embedded C# for Windows PowerShell 5.1 compatibility. During startup, `status.txt` should progress through `starting`, `native_ready`, and `running<TAB><hwnd>`. An `error<TAB>ADD_TYPE_COMPILE<TAB><message>` record is a blocking compiler failure and must be copied verbatim into the test report. A `launch_error.txt` file records an HTA `Exec` return-object/marshalling exception without relying on that unreliable object for process status; continue checking `status.txt`, because the confirmed corporate host can launch PowerShell even when returning the object raises an error.
+
 1. Launch `DesktopPet_Internal.hta`.
+   Inspect the newest `data/session_*` directory and confirm `status.txt` reaches `running<TAB><positive hwnd>`. If it remains at `starting`, reports `error<TAB>ADD_TYPE_COMPILE`, or reports `error<TAB>BRIDGE_RUNTIME`, stop and record the complete status and optional `launch_error.txt`.
 2. Verify its background is transparent and no magenta rectangle remains. Verify the mascot is borderless, compact, and absent from the taskbar where the host supports that request. If transparency setup fails, verify the pet remains usable rather than crashing.
 3. Verify the mascot walks and falls. Hover it to reveal the small info and exit controls; verify Alt+F4 remains usable (relaunch if used).
 4. Open Notepad or Excel (an ordinary visible browser or application window is also valid).

@@ -1,5 +1,5 @@
 (function (global) {
-  var fso=null, shell=null, sessionDir="", snapshotPath="", clientPath="", heartbeatPath="", statusPath="", stopPath="";
+  var fso=null, shell=null, sessionDir="", snapshotPath="", clientPath="", heartbeatPath="", statusPath="", stopPath="", launchErrorPath="";
   var started=false, sessionId="", ownHwnd="", lastHeartbeat=0, status="disabled";
   function q(v){return "'"+String(v).replace(/'/g,"''")+"'";}
   function base64Utf16(value){
@@ -14,37 +14,37 @@
   function appFolder(){var p=decodeURI(location.pathname);if(p.charAt(0)==="/"&&p.charAt(2)===":")p=p.substr(1);p=p.replace(/\//g,"\\");return fso.GetParentFolderName(p);}
   function source(title,terrainEnabled){
     var nativeCode="using System;using System.Text;using System.Runtime.InteropServices;public static class DesktopPetNative{"+
-      "public delegate bool EnumProc(IntPtr h,IntPtr p);[StructLayout(LayoutKind.Sequential)]public struct RECT{public int Left,Top,Right,Bottom;}"+
-      "[DllImport(\"user32.dll\")]public static extern bool EnumWindows(EnumProc c,IntPtr p);"+
-      "[DllImport(\"user32.dll\")]public static extern bool IsWindowVisible(IntPtr h);"+
-      "[DllImport(\"user32.dll\",CharSet=CharSet.Unicode)]public static extern int GetWindowText(IntPtr h,StringBuilder s,int n);"+
-      "[DllImport(\"user32.dll\")]public static extern bool GetWindowRect(IntPtr h,out RECT r);"+
-      "[DllImport(\"user32.dll\",CharSet=CharSet.Unicode)]public static extern IntPtr FindWindow(string c,string t);"+
-      "[DllImport(\"user32.dll\",SetLastError=true)]public static extern int GetWindowLong(IntPtr h,int n);"+
-      "[DllImport(\"user32.dll\",SetLastError=true)]public static extern int SetWindowLong(IntPtr h,int n,int v);"+
-      "[DllImport(\"user32.dll\",SetLastError=true)]public static extern bool SetLayeredWindowAttributes(IntPtr h,uint k,byte a,uint f);"+
-      "[DllImport(\"kernel32.dll\",CharSet=CharSet.Unicode,SetLastError=true)]public static extern bool MoveFileEx(string a,string b,int f);"+
-      "public static string Snapshot(){var o=new StringBuilder();EnumProc cb=delegate(IntPtr h,IntPtr p){RECT r;var t=new StringBuilder(512);bool v=IsWindowVisible(h);"+
-      "if(v&&GetWindowText(h,t,t.Capacity)>0&&GetWindowRect(h,out r)){string n=t.ToString().Replace('\\t',' ').Replace('\\r',' ').Replace('\\n',' ');"+
-      "o.Append(h.ToInt64()).Append('\\t').Append(n).Append('\\t').Append(r.Left).Append('\\t').Append(r.Top).Append('\\t').Append(r.Right).Append('\\t').Append(r.Bottom).Append(\"\\t1\\r\\n\");}return true;};EnumWindows(cb,IntPtr.Zero);return o.ToString();}"+
-      "public static long Configure(string title){IntPtr found=IntPtr.Zero;EnumProc cb=delegate(IntPtr h,IntPtr p){var t=new StringBuilder(512);GetWindowText(h,t,t.Capacity);if(t.ToString()==title){found=h;return false;}return true;};EnumWindows(cb,IntPtr.Zero);if(found==IntPtr.Zero)return 0;IntPtr h=found;int x=GetWindowLong(h,-20);SetWindowLong(h,-20,x|0x80000|0x80);"+
-      "if(!SetLayeredWindowAttributes(h,0x00FF00FF,255,1))return -1;return h.ToInt64();}}";
+      "public delegate bool EnumProc(IntPtr windowHandle,IntPtr parameter);[StructLayout(LayoutKind.Sequential)]public struct RECT{public int Left,Top,Right,Bottom;}"+
+      "[DllImport(\"user32.dll\")]public static extern bool EnumWindows(EnumProc callback,IntPtr parameter);"+
+      "[DllImport(\"user32.dll\")]public static extern bool IsWindowVisible(IntPtr windowHandle);"+
+      "[DllImport(\"user32.dll\",CharSet=CharSet.Unicode)]public static extern int GetWindowText(IntPtr windowHandle,StringBuilder text,int capacity);"+
+      "[DllImport(\"user32.dll\")]public static extern bool GetWindowRect(IntPtr windowHandle,out RECT rectangle);"+
+      "[DllImport(\"user32.dll\",SetLastError=true)]public static extern int GetWindowLong(IntPtr windowHandle,int index);"+
+      "[DllImport(\"user32.dll\",SetLastError=true)]public static extern int SetWindowLong(IntPtr windowHandle,int index,int value);"+
+      "[DllImport(\"user32.dll\",SetLastError=true)]public static extern bool SetLayeredWindowAttributes(IntPtr windowHandle,uint colorKey,byte alpha,uint flags);"+
+      "[DllImport(\"kernel32.dll\",CharSet=CharSet.Unicode,SetLastError=true)]public static extern bool MoveFileEx(string existingPath,string replacementPath,int flags);"+
+      "public static string Snapshot(){StringBuilder output=new StringBuilder();EnumProc snapshotCallback=delegate(IntPtr windowHandle,IntPtr parameter){RECT rectangle;StringBuilder titleBuilder=new StringBuilder(512);bool visible=IsWindowVisible(windowHandle);"+
+      "if(visible&&GetWindowText(windowHandle,titleBuilder,titleBuilder.Capacity)>0&&GetWindowRect(windowHandle,out rectangle)){string windowTitle=titleBuilder.ToString().Replace('\\t',' ').Replace('\\r',' ').Replace('\\n',' ');"+
+      "output.Append(windowHandle.ToInt64()).Append('\\t').Append(windowTitle).Append('\\t').Append(rectangle.Left).Append('\\t').Append(rectangle.Top).Append('\\t').Append(rectangle.Right).Append('\\t').Append(rectangle.Bottom).Append(\"\\t1\\r\\n\");}return true;};EnumWindows(snapshotCallback,IntPtr.Zero);return output.ToString();}"+
+      "public static long Configure(string expectedTitle){IntPtr foundWindow=IntPtr.Zero;EnumProc findCallback=delegate(IntPtr windowHandle,IntPtr parameter){StringBuilder titleBuilder=new StringBuilder(512);GetWindowText(windowHandle,titleBuilder,titleBuilder.Capacity);if(titleBuilder.ToString()==expectedTitle){foundWindow=windowHandle;return false;}return true;};EnumWindows(findCallback,IntPtr.Zero);if(foundWindow==IntPtr.Zero)return 0;IntPtr targetWindow=foundWindow;int extendedStyle=GetWindowLong(targetWindow,-20);SetWindowLong(targetWindow,-20,extendedStyle|0x80000|0x80);"+
+      "if(!SetLayeredWindowAttributes(targetWindow,0x00FF00FF,255,1))return -1;return targetWindow.ToInt64();}}";
     return "$ErrorActionPreference='Stop';$terrain="+(terrainEnabled?"$true":"$false")+";$snapshot="+q(snapshotPath)+";$heartbeat="+q(heartbeatPath)+";$client="+q(clientPath)+";$status="+q(statusPath)+";$stop="+q(stopPath)+";"+
-      "try{Add-Type -TypeDefinition "+q(nativeCode)+";$hwnd=[DesktopPetNative]::Configure("+q(title)+");[IO.File]::WriteAllText($status,'running'+[char]9+$hwnd);"+
+      "[IO.File]::WriteAllText($status,'starting');try{Add-Type -TypeDefinition "+q(nativeCode)+"}catch{$message=$_.Exception.Message -replace '[\\r\\n\\t]+',' ';[IO.File]::WriteAllText($status,'error'+[char]9+'ADD_TYPE_COMPILE'+[char]9+$message);return};"+
+      "[IO.File]::WriteAllText($status,'native_ready');try{$hwnd=[DesktopPetNative]::Configure("+q(title)+");[IO.File]::WriteAllText($status,'running'+[char]9+$hwnd);"+
       "while($true){if(Test-Path -LiteralPath $stop){break};if(!(Test-Path -LiteralPath $client)){break};"+
       "$age=((Get-Date)-(Get-Item -LiteralPath $client).LastWriteTime).TotalSeconds;if($age -gt 15){break};"+
       "if($terrain){$tmp=$snapshot+'.tmp';[IO.File]::WriteAllText($tmp,[DesktopPetNative]::Snapshot(),[Text.Encoding]::UTF8);"+
       "if(![DesktopPetNative]::MoveFileEx($tmp,$snapshot,3)){throw 'Atomic snapshot replacement failed'}};"+
       "[IO.File]::WriteAllText($heartbeat,[DateTimeOffset]::Now.ToUnixTimeMilliseconds().ToString());Start-Sleep -Milliseconds 400};"+
-      "[IO.File]::WriteAllText($status,'stopped')}catch{[IO.File]::WriteAllText($status,'error'+[char]9+$_.Exception.Message)}";
+      "[IO.File]::WriteAllText($status,'stopped')}catch{$message=$_.Exception.Message -replace '[\\r\\n\\t]+',' ';[IO.File]::WriteAllText($status,'error'+[char]9+'BRIDGE_RUNTIME'+[char]9+$message)}";
   }
   function start(title,enabled){
     try{fso=new ActiveXObject("Scripting.FileSystemObject");shell=new ActiveXObject("WScript.Shell");sessionId=(new Date()).getTime()+"_"+Math.floor(Math.random()*1000000);
       sessionDir=appFolder()+"\\data\\session_"+sessionId;fso.CreateFolder(sessionDir);snapshotPath=sessionDir+"\\windows.tsv";
-      clientPath=sessionDir+"\\client.heartbeat";heartbeatPath=sessionDir+"\\bridge.heartbeat";statusPath=sessionDir+"\\status.txt";stopPath=sessionDir+"\\stop.request";
-      write(clientPath,String((new Date()).getTime()));status="starting";
+      clientPath=sessionDir+"\\client.heartbeat";heartbeatPath=sessionDir+"\\bridge.heartbeat";statusPath=sessionDir+"\\status.txt";stopPath=sessionDir+"\\stop.request";launchErrorPath=sessionDir+"\\launch_error.txt";
+      write(clientPath,String((new Date()).getTime()));write(statusPath,"starting");status="starting";
       var exe=shell.ExpandEnvironmentStrings("%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe");
-      try{shell.Exec("\""+exe+"\" -NoLogo -NoProfile -NonInteractive -EncodedCommand "+base64Utf16(source(title,enabled)));}catch(launchResultError){}
+      try{shell.Exec("\""+exe+"\" -NoLogo -NoProfile -NonInteractive -EncodedCommand "+base64Utf16(source(title,enabled)));}catch(launchResultError){write(launchErrorPath,String(launchResultError.description||launchResultError.message));status="launch return error; awaiting file status";}
       started=true;
     }catch(e){status="error: "+e.description;started=false;}
   }
