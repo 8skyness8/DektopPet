@@ -11,6 +11,24 @@ This directory is a self-contained, offline, text-only feasibility probe. It doe
 * A small original transparent PNG made only for this PoC is embedded directly in the HTA as a base64 `data:image/png` URI. It tests PNG alpha without adding a binary repository file or generating anything at runtime. Its transparent pixels expose the colored/checkered HTML stage, but ordinary HTA window composition remains opaque: they do **not** expose the desktop below the native window. The PoC therefore reports `NOT_SUPPORTED`, rather than presenting document-level PNG alpha as true per-pixel window transparency. No helper/native component is used.
 * On explicit request only, the probe tries the built-in COM ProgIDs `UIAutomationClient.CUIAutomation`, then `CUIAutomation`. It calls `GetRootElement`, `CreateTrueCondition`, and `FindAll(TreeScope_Children)`, then attempts `CurrentName`, `CurrentBoundingRectangle`, `CurrentIsEnabled`, and `CurrentIsOffscreen` for at most 20 desktop children. Whether UI Automation's COM values are dispatchable to the installed HTA/JScript engine, and whether corporate security permits access, are deliberately left for the target-PC test.
 * `WINDOW_GEOMETRY_SUPPORTED` is shown only when at least one real bounding rectangle is returned. Child enumeration without a script-readable rectangle is `WINDOW_ENUMERATION_ONLY`; failure or no children is `NOT_SUPPORTED`. WMI, process lists, and `AppActivate` are not used as substitutes.
+* **Confirmed target result:** UI Automation COM activation fails for both `UIAutomationClient.CUIAutomation` and `CUIAutomation` with “cannot create automation server object.” That failed path remains available in the diagnostics for reproducibility.
+* **Confirmed target result:** Windows PowerShell runs in FullLanguage mode, `Add-Type` and P/Invoke to the installed `user32.dll` work, and `EnumWindows`/`IsWindowVisible`/`GetWindowText`/`GetWindowRect` return real Notepad, Excel, and browser geometry.
+
+## Embedded PowerShell bridge tests
+
+The **Test PowerShell window bridge** button uses `WScript.Shell.Exec` to start the Windows-installed `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe` with `-NoLogo -NoProfile -NonInteractive -EncodedCommand`. The command text lives inside the HTA and is encoded as UTF-16LE base64 by JScript; there is no `.ps1`, execution-policy change, elevation, bundled executable, or intermediate result file. PowerShell returns at most 20 tab-separated rows over captured standard output. Each row contains `HWND`, title, left, top, width, and height. The HTA reports `PASS` only after parsing at least one complete numeric geometry row.
+
+Each click creates at most one process, concurrent requests are refused, completion is checked by a temporary 100 ms timer, and a 20-second timeout calls `Terminate`. Standard error and nonzero exit status are reported. The diagnostic counter includes both bridge and transparency invocations and reports whether the child exited cleanly. There is no continuous enumeration or persistent PowerShell process.
+
+The PowerShell source uses `Add-Type` only in its child process to declare P/Invoke signatures for `EnumWindows`, `IsWindowVisible`, `GetWindowText`, `GetWindowRect`, `FindWindow`, architecture-appropriate `GetWindowLong`/`GetWindowLongPtr` and `SetWindowLong`/`SetWindowLongPtr`, and `SetLayeredWindowAttributes` from the built-in `user32.dll`.
+
+The **Test color-key transparency** button finds only the unique HTA title `DesktopPet_Internal_PoC_Unique_7F31`, adds `WS_EX_LAYERED`, and asks `SetLayeredWindowAttributes` to color-key the deliberately obvious magenta HTML background. `COLORKEY_SUPPORTED` means that API call returned success and still requires visual confirmation. This is binary color-key transparency, **not** true per-pixel alpha. **Restore Opaque** removes `WS_EX_LAYERED`; Alt+F4 and the diagnostic Exit button remain available. If process launch is denied, the result is `BLOCKED`; API/bridge errors produce `FAILED` with error text.
+
+## Current architecture feasibility
+
+* **A. PET_CORE:** HTA launch, animation, local persistence, and dragging (after the capture compatibility fix) are supported on the tested corporate PC.
+* **B. APPLICATION_TERRAIN:** UI Automation COM is unsupported/blocked. PowerShell FullLanguage, `Add-Type`/user32, `EnumWindows`/`GetWindowRect`, and real external application geometry are supported when run directly. Automatic HTA-to-PowerShell invocation and result return remain the Test 8 gate.
+* **C. VISUAL_INTEGRATION:** native HTA per-pixel transparency is unsupported. The Win32 layered-window color-key route remains pending Test 9; it must not be described as per-pixel alpha.
 
 ## Exact corporate-PC manual procedure
 
@@ -26,7 +44,9 @@ This directory is a self-contained, offline, text-only feasibility probe. It doe
 10. Select **Retest local file**. Confirm `PASS (write/read/reload)`, then open `data/settings.ini` and verify it contains exactly the two non-personal settings. Confirm no file was intentionally written elsewhere.
 11. Select **Test application windows** once. Confirm the request counter increments once; it must not continue incrementing. Copy the UI Automation status, application-terrain classification, complete error text, and table.
 12. Compare table names and rectangles with the visible Notepad, Excel, and browser windows. A named item without numeric `Left`, `Top`, `Width`, and `Height` does not pass application terrain. Record each application's bounds or `NOT_FOUND`.
-13. Select **Exit** and confirm the HTA closes. Copy the completed result template and diagnostic text back for assessment.
+13. Select **Test PowerShell window bridge** once. Confirm exactly one invocation is added, the process reports a clean exit, and the table contains credible HWND/title/rectangle rows for the open applications. `PASS` requires geometry, not merely process startup. Copy all error text. Click again only if a deliberate repeat is needed; confirm no PowerShell process remains afterward.
+14. Select **Test color-key transparency**. Confirm only the magenta regions of this uniquely titled HTA become transparent, the mascot remains visible, other windows are unchanged, and diagnostics/Alt+F4 remain recoverable. Record the exact classification. Select **Restore Opaque** and confirm the magenta background returns. Do not report true per-pixel alpha.
+15. Select **Exit** and confirm the HTA closes. Copy the completed result template and diagnostic text back for assessment.
 
 ## Result template
 
@@ -42,6 +62,10 @@ MOUSE_CAPTURE:
 LOCAL_FILE_WRITE:
 UIAUTOMATION_COM:
 WINDOW_GEOMETRY:
+POWERSHELL_BRIDGE:
+POWERSHELL_INVOCATIONS:
+POWERSHELL_EXITED_CLEANLY:
+TRANSPARENT_WINDOW:
 NOTEPAD_BOUNDS:
 EXCEL_BOUNDS:
 BROWSER_BOUNDS:
