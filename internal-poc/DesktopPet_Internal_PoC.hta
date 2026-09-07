@@ -40,6 +40,9 @@ function init(){
   window.resizeTo(670,390); window.moveTo(Math.max(0,screen.availWidth-690),Math.max(0,screen.availHeight-430));
   text("taskbar","requested hidden (showInTaskBar=no); verify manually");
   text("transparency","NOT_SUPPORTED");
+  text("mouseCapture",typeof byId("mascot").setCapture!=="undefined"?"SUPPORTED":"NOT_SUPPORTED");
+  window.onblur=endDrag;
+  document.onkeydown=keyDown;
   testPersistence(); startLoop(); updateStats();
 }
 function startLoop(){ if(timer===null){ running=true; timer=window.setInterval(update,intervalMs); } updateStats(); }
@@ -49,11 +52,21 @@ function update(){
   if(!dragging){ var next=window.screenLeft+(direction*3); var max=Math.max(0,screen.availWidth-document.documentElement.clientWidth); if(next<=0){next=0;direction=1;} if(next>=max){next=max;direction=-1;} window.moveTo(next,window.screenTop); }
   updateStats();
 }
-function updateStats(){ text("running",running?"RUNNING":"STOPPED"); text("ticks",ticks); text("interval",intervalMs+" ms"); text("requests",enumRequests); text("threads","No. One bounded window.setInterval timer; UI Automation is request-only."); text("clicks",clicks); }
+function updateStats(){ text("running",running?"RUNNING":"STOPPED"); text("ticks",ticks); text("interval",intervalMs+" ms"); text("requests",enumRequests); text("threads","No. One bounded window.setInterval timer; UI Automation is request-only."); text("clicks",clicks); text("dragState",dragging?"DRAGGING":"IDLE"); }
 function toggleDiagnostics(){ var panel=byId("diagnostics"); if(panel.style.display==="none"){ panel.style.display="block"; window.resizeTo(670,390); }else{ panel.style.display="none"; window.resizeTo(180,200); } }
-function mouseDown(){ dragging=true; dragDX=event.screenX-window.screenLeft; dragDY=event.screenY-window.screenTop; document.setCapture(); }
-function mouseMove(){ if(dragging){ window.moveTo(event.screenX-dragDX,event.screenY-dragDY); } }
-function mouseUp(){ if(dragging){ dragging=false; try{ document.releaseCapture(); }catch(e){} } }
+function mouseDown(){
+  dragging=true; dragDX=event.screenX-window.screenLeft; dragDY=event.screenY-window.screenTop;
+  var mascot=byId("mascot");
+  if(typeof mascot.setCapture!=="undefined"){ try{ mascot.setCapture(); }catch(e){ text("mouseCapture","NOT_SUPPORTED"); } }
+  updateStats(); event.cancelBubble=true;
+}
+function mouseMove(){ if(dragging){ if(event.button===0){ endDrag(); return; } window.moveTo(event.screenX-dragDX,event.screenY-dragDY); } }
+function endDrag(){
+  var mascot=byId("mascot"), wasDragging=dragging; dragging=false;
+  if(wasDragging && typeof mascot.releaseCapture!=="undefined"){ try{ mascot.releaseCapture(); }catch(e){} }
+  updateStats();
+}
+function keyDown(){ if(event.keyCode===27) endDrag(); }
 function mascotClick(){ clicks++; text("lastAction","Mascot click detected"); updateStats(); }
 
 function pocFolder(){ var p=decodeURI(location.pathname); if(p.charAt(0)==="/" && p.charAt(2)===":") p=p.substr(1); p=p.replace(/\//g,"\\"); return new ActiveXObject("Scripting.FileSystemObject").GetParentFolderName(p); }
@@ -97,9 +110,9 @@ function testWindows(){
 }
 </script>
 </head>
-<body onload="init()" onmousemove="mouseMove()" onmouseup="mouseUp()">
-<div id="stage" onmousedown="mouseDown()">
-  <div id="mascot" title="Original CSS test mascot" onclick="mascotClick()">
+<body onload="init()" onmousemove="mouseMove()" onmouseup="endDrag()" onblur="endDrag()" onkeydown="keyDown()">
+<div id="stage">
+  <div id="mascot" title="Original CSS test mascot" onmousedown="mouseDown()" onlosecapture="endDrag()" onclick="mascotClick()">
    <span class="ear" id="earLeft"></span><span class="ear" id="earRight"></span>
    <span id="petBody"><span class="eye" id="eyeLeft"></span><span class="eye" id="eyeRight"></span><span id="mouth"></span></span>
   </div>
@@ -112,6 +125,7 @@ function testWindows(){
  <p>Transparency: <span class="status" id="transparency"></span> — transparent PNG pixels reveal the HTA stage/document background, not windows beneath it. HTA alone does not request a layered, per-pixel-composed native window.</p>
  <p>Taskbar: <span id="taskbar"></span></p>
  <p>Animation: <span id="running"></span>; interval <span id="interval"></span>; ticks <span id="ticks"></span>; clicks <span id="clicks"></span></p>
+ <p>DRAG_STATE: <span class="status" id="dragState">IDLE</span>; MOUSE_CAPTURE: <span class="status" id="mouseCapture">NOT_SUPPORTED</span></p>
  <p>Background object/thread: <span id="threads"></span></p>
  <p>Persistence: <span class="status" id="persistence"></span></p>
  <p>UI Automation COM: <span id="uia">not tested</span>; requests: <span id="requests"></span></p>
