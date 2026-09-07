@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DesktopPet Internal PoC</title>
+<hta:application id="desktopPetPoC" applicationname="DesktopPet Internal PoC"
+  border="none" caption="no" contextmenu="no" maximizebutton="no"
+  minimizebutton="no" scroll="no" selection="no" showintaskbar="no"
+  singleinstance="yes" sysmenu="no" windowstate="normal" />
+<meta http-equiv="X-UA-Compatible" content="IE=9" />
+<style type="text/css">
+html, body { margin:0; padding:0; overflow:hidden; font:12px Segoe UI,Arial,sans-serif; background:#f2f2f2; }
+#stage { position:relative; width:180px; height:170px; cursor:move;
+  background-color:#d7e2ec; background-image:linear-gradient(45deg,#bdcad5 25%,transparent 25%),linear-gradient(-45deg,#bdcad5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#bdcad5 75%),linear-gradient(-45deg,transparent 75%,#bdcad5 75%); background-size:20px 20px; background-position:0 0,0 10px,10px -10px,-10px 0; }
+#mascot { position:absolute; left:34px; top:24px; width:110px; height:105px; }
+#petBody { position:absolute; left:10px; top:12px; width:90px; height:82px; border-radius:46px; background:#4397d3; border:3px solid #142a3a; }
+.ear { position:absolute; top:0; width:0; height:0; border-left:18px solid transparent; border-right:18px solid transparent; border-bottom:34px solid #4397d3; }
+#earLeft { left:4px; transform:rotate(-18deg); } #earRight { right:4px; transform:rotate(18deg); }
+.eye { position:absolute; top:31px; width:13px; height:13px; border-radius:8px; background:#142a3a; }
+#eyeLeft { left:25px; } #eyeRight { right:25px; }
+#mouth { position:absolute; left:35px; top:57px; width:20px; height:9px; border-bottom:3px solid white; border-radius:0 0 18px 18px; }
+#mascot.blink .eye { height:3px; top:36px; border-radius:0; }
+#mascot.bob { top:20px; }
+#alphaTest { position:absolute; right:4px; top:4px; width:32px; height:32px; border:1px solid #334; }
+#tag { position:absolute; left:7px; bottom:5px; padding:3px 6px; background:#fff; border:1px solid #334; cursor:pointer; }
+#diagnostics { position:absolute; left:180px; top:0; width:470px; height:350px; padding:8px; box-sizing:border-box; background:#fff; border:2px solid #375a7f; overflow:auto; }
+h1 { font-size:15px; margin:0 0 5px; } p { margin:4px 0; } button { margin:2px; }
+.status { font-weight:bold; } #errors { color:#8b0000; white-space:pre-wrap; }
+table { width:100%; border-collapse:collapse; font-size:10px; } th,td { border:1px solid #aaa; padding:2px; text-align:left; }
+</style>
+<script language="JScript">
+var running=true, timer=null, intervalMs=100, ticks=0, direction=1, frame=0;
+var dragging=false, dragDX=0, dragDY=0, clicks=0, enumRequests=0;
+
+function byId(id){ return document.getElementById(id); }
+function text(id,value){ byId(id).innerText=value; }
+function safeHtml(value){ return String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;"); }
+function logError(message){ byId("errors").innerText += (byId("errors").innerText?"\r\n":"")+message; }
+
+function init(){
+  window.resizeTo(670,390); window.moveTo(Math.max(0,screen.availWidth-690),Math.max(0,screen.availHeight-430));
+  text("taskbar","requested hidden (showInTaskBar=no); verify manually");
+  text("transparency","NOT_SUPPORTED");
+  testPersistence(); startLoop(); updateStats();
+}
+function startLoop(){ if(timer===null){ running=true; timer=window.setInterval(update,intervalMs); } updateStats(); }
+function stopLoop(){ if(timer!==null){ window.clearInterval(timer); timer=null; } running=false; updateStats(); }
+function update(){
+  ticks++; frame=(frame+1)%2; byId("mascot").className=frame?"blink bob":"";
+  if(!dragging){ var next=window.screenLeft+(direction*3); var max=Math.max(0,screen.availWidth-document.documentElement.clientWidth); if(next<=0){next=0;direction=1;} if(next>=max){next=max;direction=-1;} window.moveTo(next,window.screenTop); }
+  updateStats();
+}
+function updateStats(){ text("running",running?"RUNNING":"STOPPED"); text("ticks",ticks); text("interval",intervalMs+" ms"); text("requests",enumRequests); text("threads","No. One bounded window.setInterval timer; UI Automation is request-only."); text("clicks",clicks); }
+function toggleDiagnostics(){ var panel=byId("diagnostics"); if(panel.style.display==="none"){ panel.style.display="block"; window.resizeTo(670,390); }else{ panel.style.display="none"; window.resizeTo(180,200); } }
+function mouseDown(){ dragging=true; dragDX=event.screenX-window.screenLeft; dragDY=event.screenY-window.screenTop; document.setCapture(); }
+function mouseMove(){ if(dragging){ window.moveTo(event.screenX-dragDX,event.screenY-dragDY); } }
+function mouseUp(){ if(dragging){ dragging=false; try{ document.releaseCapture(); }catch(e){} } }
+function mascotClick(){ clicks++; text("lastAction","Mascot click detected"); updateStats(); }
+
+function pocFolder(){ var p=decodeURI(location.pathname); if(p.charAt(0)==="/" && p.charAt(2)===":") p=p.substr(1); p=p.replace(/\//g,"\\"); return new ActiveXObject("Scripting.FileSystemObject").GetParentFolderName(p); }
+function testPersistence(){
+  try{
+    var fso=new ActiveXObject("Scripting.FileSystemObject"), path=pocFolder()+"\\data\\settings.ini";
+    var out=fso.CreateTextFile(path,true,false); out.WriteLine("speech=true"); out.WriteLine("testBond=57"); out.Close();
+    var input=fso.OpenTextFile(path,1,false,0), contents=input.ReadAll(); input.Close();
+    text("persistence",contents.indexOf("speech=true")>=0 && contents.indexOf("testBond=57")>=0?"PASS (write/read/reload)":"FAIL (content mismatch)");
+  }catch(e){ text("persistence","FAIL"); logError("Persistence: "+e.description); }
+}
+
+function rectFrom(raw){
+  var a=null; try{ if(raw && raw.toArray) a=raw.toArray(); }catch(ignore){}
+  if(a && a.length>=4) return {left:Number(a[0]),top:Number(a[1]),width:Number(a[2])-Number(a[0]),height:Number(a[3])-Number(a[1])};
+  try{ if(raw.left!==undefined) return {left:Number(raw.left),top:Number(raw.top),width:Number(raw.right)-Number(raw.left),height:Number(raw.bottom)-Number(raw.top)}; }catch(ignore2){}
+  try{ if(raw.Left!==undefined) return {left:Number(raw.Left),top:Number(raw.Top),width:Number(raw.Right)-Number(raw.Left),height:Number(raw.Bottom)-Number(raw.Top)}; }catch(ignore3){}
+  return null;
+}
+function testWindows(){
+  enumRequests++; updateStats(); byId("windowRows").innerHTML=""; text("uia","probing"); text("windowResult","NOT_SUPPORTED");
+  var automation=null, used="", ids=["UIAutomationClient.CUIAutomation","CUIAutomation"];
+  for(var p=0;p<ids.length && automation===null;p++){ try{ automation=new ActiveXObject(ids[p]); used=ids[p]; }catch(e){ logError(ids[p]+": "+e.description); } }
+  if(automation===null){ text("uia","unavailable/blocked"); return; }
+  text("uia","available via "+used); var count=0, geometry=0, html="";
+  try{
+    var root=automation.GetRootElement(), condition=automation.CreateTrueCondition(), children=root.FindAll(2,condition);
+    var length=Number(children.Length); if(isNaN(length)) length=0;
+    for(var i=0;i<length && count<20;i++){
+      try{
+        var el=children.GetElement(i), name=""; try{name=el.CurrentName;}catch(ignoreName){}
+        var rect=null; try{rect=rectFrom(el.CurrentBoundingRectangle);}catch(ignoreRect){}
+        var enabled="?", offscreen="?"; try{enabled=el.CurrentIsEnabled?"yes":"no";}catch(ignoreEnabled){} try{offscreen=el.CurrentIsOffscreen?"yes":"no";}catch(ignoreOffscreen){}
+        if(rect && isFinite(rect.left) && isFinite(rect.width)){ geometry++; html+="<tr><td>"+safeHtml(name||"(unnamed)")+"</td><td>"+Math.round(rect.left)+"</td><td>"+Math.round(rect.top)+"</td><td>"+Math.round(rect.width)+"</td><td>"+Math.round(rect.height)+"</td><td>enabled="+enabled+", offscreen="+offscreen+"</td></tr>"; }
+        else { html+="<tr><td>"+safeHtml(name||"(unnamed)")+"</td><td colspan='4'>bounding rectangle unavailable to script</td><td>enabled="+enabled+", offscreen="+offscreen+"</td></tr>"; }
+        count++;
+      }catch(itemError){ logError("UIA child "+i+": "+itemError.description); }
+    }
+    byId("windowRows").innerHTML=html; text("windowResult",geometry>0?"WINDOW_GEOMETRY_SUPPORTED":(count>0?"WINDOW_ENUMERATION_ONLY":"NOT_SUPPORTED"));
+  }catch(e){ logError("UI Automation enumeration: "+e.description); text("windowResult","NOT_SUPPORTED"); }
+}
+</script>
+</head>
+<body onload="init()" onmousemove="mouseMove()" onmouseup="mouseUp()">
+<div id="stage" onmousedown="mouseDown()">
+  <div id="mascot" title="Original CSS test mascot" onclick="mascotClick()">
+   <span class="ear" id="earLeft"></span><span class="ear" id="earRight"></span>
+   <span id="petBody"><span class="eye" id="eyeLeft"></span><span class="eye" id="eyeRight"></span><span id="mouth"></span></span>
+  </div>
+  <!-- Original PoC-only transparent PNG, embedded to keep this change text-only. -->
+  <img id="alphaTest" alt="Embedded transparent PNG alpha test" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAACKklEQVR42u3dzY4TMRCG4ekJOsLOQ+AkHIATcOEU3DnqMXACrhxyBO4RFDtOYsWu40r2c9upZz+HKIrF79dSxbI/duUk0cTnt3dVVVVVVVVVVVVVVVVVVVVVVVVVVVX1p82uXv0cgN9v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zV4NwPrp2gDeb/ZqALbNXg3A+unaAN5v9moAts1eDcD66doA3m/2agC2zVwOwL8D1MDxVVVVVVVVVVVVVVVVVVVVVVVVVVVV9Q3wCVYTgcbwYF62AAAAAElFTkSuQmCC" />
+  <span id="tag" onclick="toggleDiagnostics();event.cancelBubble=true">Diagnostics</span>
+</div>
+<div id="diagnostics" onmousedown="event.cancelBubble=true">
+ <h1>DesktopPet Internal feasibility diagnostics</h1>
+ <p>Transparency: <span class="status" id="transparency"></span> — transparent PNG pixels reveal the HTA stage/document background, not windows beneath it. HTA alone does not request a layered, per-pixel-composed native window.</p>
+ <p>Taskbar: <span id="taskbar"></span></p>
+ <p>Animation: <span id="running"></span>; interval <span id="interval"></span>; ticks <span id="ticks"></span>; clicks <span id="clicks"></span></p>
+ <p>Background object/thread: <span id="threads"></span></p>
+ <p>Persistence: <span class="status" id="persistence"></span></p>
+ <p>UI Automation COM: <span id="uia">not tested</span>; requests: <span id="requests"></span></p>
+ <p>Application terrain: <span class="status" id="windowResult">NOT_SUPPORTED (not tested yet)</span></p>
+ <button onclick="startLoop()">Start</button><button onclick="stopLoop()">Stop</button>
+ <button onclick="testPersistence()">Retest local file</button><button onclick="testWindows()">Test application windows</button>
+ <button onclick="toggleDiagnostics()">Hide diagnostics</button><button onclick="window.close()">Exit</button>
+ <p>Last interaction: <span id="lastAction">none</span></p>
+ <table><thead><tr><th>Name</th><th>Left</th><th>Top</th><th>Width</th><th>Height</th><th>Visible/Usable</th></tr></thead><tbody id="windowRows"></tbody></table>
+ <div id="errors"></div>
+</div>
+</body>
+</html>
