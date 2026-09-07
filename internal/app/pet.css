@@ -1,0 +1,22 @@
+html, body { width:112px; height:128px; margin:0; padding:0; overflow:hidden; background:#ff00ff; }
+#stage { position:relative; width:112px; height:128px; background:#ff00ff; font:10px "Segoe UI",sans-serif; }
+#mascot { position:absolute; left:10px; top:27px; width:92px; height:101px; cursor:move; }
+.body { position:absolute; left:9px; top:19px; width:68px; height:70px; border:3px solid #172c38;
+  border-radius:36px 36px 30px 30px; background:#58b8b0; box-shadow:inset -7px -7px 0 #38948e; }
+.ear { position:absolute; top:6px; width:0; height:0; border-left:18px solid transparent;
+  border-right:18px solid transparent; border-bottom:35px solid #172c38; }
+.ear:after { content:""; position:absolute; left:-13px; top:7px; width:0; height:0;
+  border-left:13px solid transparent; border-right:13px solid transparent; border-bottom:27px solid #58b8b0; }
+.ear.left { left:5px; transform:rotate(-13deg); } .ear.right { right:5px; transform:rotate(13deg); }
+.eye { position:absolute; top:25px; width:8px; height:11px; border-radius:7px; background:#172c38; }
+.eye.left { left:18px; } .eye.right { right:18px; }
+.nose { position:absolute; left:31px; top:43px; width:7px; height:5px; border-radius:5px; background:#f7d4cf; }
+.foot { position:absolute; top:64px; width:22px; height:13px; border:3px solid #172c38; border-top:0;
+  border-radius:0 0 14px 14px; background:#58b8b0; }
+.foot.left { left:4px; } .foot.right { right:4px; }
+#menu,#exit { position:absolute; display:none; width:17px; height:17px; padding:0; border:1px solid #172c38;
+  border-radius:9px; background:#f6fbfa; color:#172c38; font:bold 11px Arial; line-height:14px; cursor:pointer; }
+#menu { left:1px; top:1px; } #exit { right:1px; top:1px; }
+#stage:hover #menu,#stage:hover #exit { display:block; }
+#debug { display:none; position:absolute; left:1px; top:20px; width:108px; padding:3px; box-sizing:border-box;
+  border:1px solid #172c38; background:#f6fbfa; color:#172c38; white-space:pre; }

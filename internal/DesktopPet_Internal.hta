@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DesktopPet Internal</title>
+<hta:application id="desktopPet" applicationname="DesktopPet Internal"
+  border="none" caption="no" contextmenu="no" maximizebutton="no"
+  minimizebutton="no" navigable="no" scroll="no" selection="no"
+  showintaskbar="no" singleinstance="yes" sysmenu="yes" windowstate="normal" />
+<meta http-equiv="X-UA-Compatible" content="IE=9" />
+<link rel="stylesheet" type="text/css" href="app/pet.css" />
+<script language="JScript" src="app/bridge.js"></script>
+<script language="JScript" src="app/terrain.js"></script>
+<script language="JScript" src="app/physics.js"></script>
+<script language="JScript" src="app/main.js"></script>
+</head>
+<body onload="DesktopPet.start()" onunload="DesktopPet.stop()"
+  onmousemove="DesktopPet.dragMove()" onmouseup="DesktopPet.endDrag()">
+  <div id="stage">
+    <div id="mascot" title="Drag me" onmousedown="DesktopPet.beginDrag()"
+      onlosecapture="DesktopPet.endDrag()">
+      <span class="ear left"></span><span class="ear right"></span>
+      <span class="body"><span class="eye left"></span><span class="eye right"></span>
+        <span class="nose"></span><span class="foot left"></span><span class="foot right"></span></span>
+    </div>
+    <button id="menu" title="Debug information" onclick="DesktopPet.toggleDebug();event.cancelBubble=true">i</button>
+    <button id="exit" title="Exit DesktopPet" onclick="DesktopPet.exit();event.cancelBubble=true">&#215;</button>
+    <div id="debug"></div>
+  </div>
+</body>
+</html>
