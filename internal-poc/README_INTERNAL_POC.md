@@ -16,23 +16,25 @@ This directory is a self-contained, offline, text-only feasibility probe. It doe
 
 ## Embedded PowerShell bridge tests
 
-The **Test PowerShell window bridge** button uses `WScript.Shell.Exec` to start the Windows-installed `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe` with `-NoLogo -NoProfile -NonInteractive -EncodedCommand`. The command text lives inside the HTA and is encoded as UTF-16LE base64 by JScript; there is no `.ps1`, execution-policy change, elevation, or bundled executable. Redirected stdout/stderr are deliberately **not** the data protocol, because the corporate test exposed redirected Windows PowerShell errors as `#< CLIXML`. Each request deletes stale `data/bridge_result.txt` and `data/bridge_error.txt`; PowerShell writes plain text to those paths, exits, and the HTA reads them with `Scripting.FileSystemObject`. No CLIXML is parsed or displayed.
+The **Test PowerShell window bridge** button uses `WScript.Shell.Run(command, 0, true)` to start the Windows-installed `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe` hidden and wait synchronously for its numeric exit code. The command retains `-NoLogo -NoProfile -NonInteractive -EncodedCommand`. The command text lives inside the HTA and is encoded as UTF-16LE base64 by JScript; there is no `.ps1`, execution-policy change, elevation, or bundled executable. The brief diagnostic UI pause is intentional in this feasibility PoC. `Exec.Status`, `Exec.ExitCode`, stdout, and stderr are not inspected, because the corporate test showed that polling those members is unreliable and redirected Windows PowerShell errors can appear as `#< CLIXML`.
+
+Each request deletes stale `data/bridge_result.txt` and `data/bridge_error.txt`; PowerShell writes plain text to those paths, exits 0 on success or 1 after a caught failure, and the HTA reads them with `Scripting.FileSystemObject` after `Run` returns. No CLIXML is parsed or displayed.
 
 The C# helper performs `EnumWindows` and all filtering/geometry collection itself and returns TSV containing `HWND`, title, left, top, width, and height. PowerShell is only a thin launcher that writes that string to `bridge_result.txt`. The HTA displays at most 20 rows and reports `PASS` only after parsing at least one complete numeric geometry row. PowerShell catches exceptions and writes only `Exception.ToString()` as human-readable plain text to `bridge_error.txt`; progress, warning, and information streams are set to `SilentlyContinue`.
 
-Each click creates at most one process, concurrent requests are refused, completion is checked by a temporary 100 ms timer, and a 20-second timeout calls `Terminate`. Closing the HTA also terminates an active child. The plain error file and nonzero exit status are reported. The diagnostic counter includes both bridge and transparency invocations and reports whether the child exited cleanly. There is no continuous enumeration or persistent PowerShell process.
+Each explicit click creates one hidden process and blocks until that process exits. The return code, plain result/error files, valid-row count, and invocation count are then reported. There is no polling, continuous enumeration, persistent PowerShell process, or opportunity to issue a concurrent request while the UI is synchronously waiting. A production bridge may become asynchronous only after feasibility work is complete.
 
 The PowerShell source uses `Add-Type` only in its child process to declare P/Invoke signatures for `EnumWindows`, `IsWindowVisible`, `GetWindowText`, `GetWindowRect`, `GetWindowThreadProcessId`, `GetWindowLong`, `SetWindowLong`, and `SetLayeredWindowAttributes` from the built-in `user32.dll`. A standard `kernel32.dll` `SetLastError` declaration makes style-call error checking unambiguous. No binary is imported or added to the repository.
 
 The **Test color-key transparency** button no longer uses unreliable `FindWindow(title)`. JScript supplies the current HTA screen position and client size. C# enumerates top-level windows, keeps only windows owned by an `mshta` process, and accepts a candidate only when left/top are within 40 pixels and width/height within 80 pixels. Exactly one candidate is required: zero yields `NOT_FOUND`, and multiple yield `AMBIGUOUS`; neither case modifies a window. A confident match is reported as `FOUND hwnd=...`, receives `WS_EX_LAYERED` through `GetWindowLong`/`SetWindowLong`, and is passed to `SetLayeredWindowAttributes` with the obvious magenta key. Automatic mascot movement pauses during identification so its coordinates remain stable.
 
-`COLORKEY_SUPPORTED` means that the API call returned success and still requires visual confirmation. This is binary color-key transparency, **not** true per-pixel alpha. **Restore Opaque** safely identifies the window again and removes `WS_EX_LAYERED`; Alt+F4 and the diagnostic Exit button remain available. If process launch is denied, the result is `BLOCKED`; file, identification, API, or bridge errors produce `FAILED` with plain error text.
+`COLORKEY_SUPPORTED` means that the API call returned success. The corporate-PC test also visually confirmed that the magenta area became transparent and desktop/application content was visible behind it: visual confirmation is **PASS**. This remains binary color-key transparency, **not** true per-pixel alpha. **Restore Opaque** safely identifies the window again and removes `WS_EX_LAYERED`; Alt+F4 and the diagnostic Exit button remain available. If process launch is denied, the result is `BLOCKED`; file, identification, API, or bridge errors produce `FAILED` with plain error text.
 
 ## Current architecture feasibility
 
-* **A. PET_CORE:** HTA launch, animation, local persistence, and dragging (after the capture compatibility fix) are supported on the tested corporate PC.
-* **B. APPLICATION_TERRAIN:** UI Automation COM is unsupported/blocked. PowerShell FullLanguage, `Add-Type`/user32, `EnumWindows`/`GetWindowRect`, and real external application geometry are supported when run directly. Automatic HTA-to-PowerShell invocation and result return remain the Test 8 gate.
-* **C. VISUAL_INTEGRATION:** native HTA per-pixel transparency is unsupported. The Win32 layered-window color-key route remains pending Test 9; it must not be described as per-pixel alpha.
+* **A. PET_CORE:** HTA launch **PASS**; animation **PASS**; drag after the capture compatibility fix **PASS**; local persistence **PASS**.
+* **B. APPLICATION_TERRAIN:** UI Automation COM unavailable; PowerShell FullLanguage **PASS**; `Add-Type`/user32 **PASS**; manual `EnumWindows`/`GetWindowRect` **PASS**; HTA-to-PowerShell launch **PASS**; PowerShell-to-`bridge_result.txt` **PASS**; real Notepad/Excel/browser geometry returned **PASS**. Automatic final UI classification remains pending retest of this synchronous monitoring fix.
+* **C. VISUAL_INTEGRATION:** native HTA per-pixel alpha unsupported; Win32 color-key transparency **PASS**, including corporate-PC visual confirmation. Color-keying must not be described as per-pixel alpha.
 
 ## Exact corporate-PC manual procedure
 
@@ -48,7 +50,7 @@ The **Test color-key transparency** button no longer uses unreliable `FindWindow
 10. Select **Retest local file**. Confirm `PASS (write/read/reload)`, then open `data/settings.ini` and verify it contains exactly the two non-personal settings. Confirm no file was intentionally written elsewhere.
 11. Select **Test application windows** once. Confirm the request counter increments once; it must not continue incrementing. Copy the UI Automation status, application-terrain classification, complete error text, and table.
 12. Compare table names and rectangles with the visible Notepad, Excel, and browser windows. A named item without numeric `Left`, `Top`, `Width`, and `Height` does not pass application terrain. Record each application's bounds or `NOT_FOUND`.
-13. Select **Clear diagnostic errors**, then **Test PowerShell window bridge** once. Confirm exactly one invocation is added, `POWERSHELL_EXIT` reports `YES (exit 0)`, `BRIDGE_RESULT_FILE` reports `(read)`, `BRIDGE_ERROR` remains `none`, and no raw `#< CLIXML` appears. Confirm the table contains credible HWND/title/rectangle rows for the open applications. `PASS` requires geometry, not merely process startup. If it fails, copy the plain error and inspect only the two bridge text files under `data`. Click again only if a deliberate repeat is needed; confirm no PowerShell process remains afterward.
+13. Select **Clear diagnostic errors**, then **Test PowerShell window bridge** once. A brief UI pause is expected. Confirm exactly one invocation is added, `POWERSHELL_EXIT_CODE` reports `0`, `BRIDGE_RESULT_FILE` reports `FOUND`, `BRIDGE_ERROR` remains `none`, `VALID_WINDOW_ROWS` is greater than zero, and no raw `#< CLIXML` appears. Confirm the table contains credible HWND/title/rectangle rows for the open applications and `POWERSHELL_BRIDGE` is `PASS`. If it fails, copy the plain error and inspect only the two bridge text files under `data`.
 14. Select **Test color-key transparency**. Require `HTA_NATIVE_WINDOW` to report exactly one `FOUND hwnd=...`; stop if it says `NOT_FOUND` or `AMBIGUOUS`. Confirm only the magenta regions of this HTA become transparent, the mascot remains visible, other windows are unchanged, and diagnostics/Alt+F4 remain recoverable. Record the exact classification. Select **Restore Opaque** and confirm the magenta background returns. Do not report true per-pixel alpha.
 15. Select **Exit** and confirm the HTA closes. Copy the completed result template and diagnostic text back for assessment.
 
@@ -68,9 +70,10 @@ UIAUTOMATION_COM:
 WINDOW_GEOMETRY:
 POWERSHELL_BRIDGE:
 POWERSHELL_INVOCATIONS:
-POWERSHELL_EXITED_CLEANLY:
+POWERSHELL_EXIT_CODE:
 BRIDGE_RESULT_FILE:
 BRIDGE_ERROR:
+VALID_WINDOW_ROWS:
 HTA_NATIVE_WINDOW:
 TRANSPARENT_WINDOW:
 NOTEPAD_BOUNDS:
