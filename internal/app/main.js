@@ -1,5 +1,7 @@
 var DesktopPet=(function () {
-  var WIDTH=112,HEIGHT=128,settings={terrainBridge:true,walking:true,speech:false,debug:false};
+  // CSS geometry: body spans stage x=10+9 through its 74px border box; feet end at y=24+19+3+64+13+3.
+  var WIDTH=112,HEIGHT=128,COLLISION_LEFT=19,COLLISION_RIGHT=93,FOOT_OFFSET_Y=126;
+  var settings={terrainBridge:true,walking:true,speech:false,debug:false};
   var state=null,surfaces=[],timer=null,lastTick=0,lastTerrain=0,bridgeInfo={status:"disabled",heartbeatAge:-1,hwnd:""};
   var fso=null,settingsPath="",dragDX=0,dragDY=0,stopping=false;
   function folder(){var p=decodeURI(location.pathname);if(p.charAt(0)==="/"&&p.charAt(2)===":")p=p.substr(1);p=p.replace(/\//g,"\\");return fso.GetParentFolderName(p);}
@@ -14,17 +16,18 @@ var DesktopPet=(function () {
     fso=new ActiveXObject("Scripting.FileSystemObject");loadSettings();
     var title="DesktopPet Internal "+(new Date()).getTime()+"_"+Math.floor(Math.random()*100000);document.title=title;
     window.resizeTo(WIDTH,HEIGHT);var x=Math.max(0,Math.floor((screen.availWidth-WIDTH)*0.65)),y=Math.max(0,Math.floor(screen.availHeight*0.12));window.moveTo(x,y);
-    state=PetPhysics.create(x,y,WIDTH,HEIGHT);document.onkeydown=keyDown;window.onblur=endDrag;window.onbeforeunload=stop;
+    state=PetPhysics.create(x,y,WIDTH,HEIGHT,COLLISION_LEFT,COLLISION_RIGHT,FOOT_OFFSET_Y);document.onkeydown=keyDown;window.onblur=endDrag;window.onbeforeunload=stop;
     document.getElementById("debug").style.display=settings.debug?"block":"none";
     TerrainBridge.start(title,settings.terrainBridge);lastTick=(new Date()).getTime();timer=window.setInterval(tick,33);
   }
   function tick(){
     var now=(new Date()).getTime(),dt=Math.min(0.1,(now-lastTick)/1000);lastTick=now;
-    if(now-lastTerrain>=400){bridgeInfo=TerrainBridge.poll();surfaces=TerrainModel.parse(bridgeInfo.text,bridgeInfo.hwnd,WIDTH);lastTerrain=now;}
+    if(now-lastTerrain>=400){bridgeInfo=TerrainBridge.poll();surfaces=TerrainModel.parse(bridgeInfo.text,bridgeInfo.hwnd,COLLISION_RIGHT-COLLISION_LEFT);lastTerrain=now;}
     if(!state.dragging){PetPhysics.step(state,surfaces,dt,{left:0,right:screen.availWidth,bottom:screen.availHeight},settings.walking);window.moveTo(Math.round(state.x),Math.round(state.y));}
     renderDebug();
   }
-  function renderDebug(){if(!settings.debug)return;document.getElementById("debug").innerText="state "+state.state+"\r\nx/y "+Math.round(state.x)+" / "+Math.round(state.y)+"\r\nsupport "+(state.supportHwnd||"screen")+"\r\nterrain "+surfaces.length+"\r\nheartbeat "+(bridgeInfo.heartbeatAge<0?"n/a":bridgeInfo.heartbeatAge+" ms")+"\r\nbridge "+bridgeInfo.status;}
+  function shortTitle(value){value=String(value||"");return value.length>24?value.substr(0,21)+"...":value;}
+  function renderDebug(){if(!settings.debug)return;var supported=state.supportHwnd!==null;document.getElementById("debug").innerText="state "+state.state+"\r\nx/y "+Math.round(state.x)+" / "+Math.round(state.y)+"\r\nsupport "+(state.supportHwnd||"screen")+(supported?"\r\nsupportTop "+Math.round(state.supportTop)+"\r\nfeetY "+Math.round(PetPhysics.feetY(state))+"\r\ntitle "+shortTitle(state.supportTitle):"")+"\r\nterrain "+surfaces.length+"\r\nheartbeat "+(bridgeInfo.heartbeatAge<0?"n/a":bridgeInfo.heartbeatAge+" ms")+"\r\nbridge "+bridgeInfo.status;}
   function beginDrag(){
     state.dragging=true;dragDX=event.screenX-window.screenLeft;dragDY=event.screenY-window.screenTop;var pet=document.getElementById("mascot");
     if(typeof pet.setCapture!=="undefined")try{pet.setCapture();}catch(e){}event.cancelBubble=true;return false;

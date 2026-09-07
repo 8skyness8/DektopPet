@@ -1,6 +1,6 @@
 html, body { width:112px; height:128px; margin:0; padding:0; overflow:hidden; background:#ff00ff; }
 #stage { position:relative; width:112px; height:128px; background:#ff00ff; font:10px "Segoe UI",sans-serif; }
-#mascot { position:absolute; left:10px; top:27px; width:92px; height:101px; cursor:move; }
+#mascot { position:absolute; left:10px; top:24px; width:92px; height:101px; cursor:move; }
 .body { position:absolute; left:9px; top:19px; width:68px; height:70px; border:3px solid #172c38;
   border-radius:36px 36px 30px 30px; background:#58b8b0; box-shadow:inset -7px -7px 0 #38948e; }
 .ear { position:absolute; top:6px; width:0; height:0; border-left:18px solid transparent;

@@ -21,6 +21,16 @@ The first corporate test exposed an older .NET Framework C# compiler rule that r
 14. In `data/session_*`, verify `status.txt` changes to `stopped` within a reasonable bounded time (normally under two seconds; allow up to 15 seconds for stale-heartbeat protection if the HTA was forcibly terminated).
 15. In Task Manager, verify no persistent orphan `powershell.exe` associated with DesktopPet remains. Do not terminate unrelated corporate PowerShell processes.
 
+## Visible-frame and foot-anchor regression check
+
+1. Open a normally restored Notepad window and drop the pet above it. Its visible feet must touch the visible top frame without an obvious floating gap.
+2. Move Notepad and confirm the feet remain attached to the corrected top surface. Resize it and confirm the pet remains attached while its body overlaps, or falls when overlap is lost.
+3. Repeat the drop, move, and resize checks with Excel.
+4. If available, repeat the landing check on a maximized ordinary application window.
+5. Enable the compact debug overlay while supported. Confirm `supportTop` and `feetY` are equal, the abbreviated support title is correct, terrain remains populated, and the heartbeat remains healthy.
+
+The bridge prefers `DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS)` visual bounds when they are positive, on-screen, and within 64 pixels per edge of `GetWindowRect`. This conservative comparison rejects likely DPI-coordinate mismatches. Failure or rejection of the built-in DWM call must fall back to `GetWindowRect` without stopping terrain enumeration.
+
 ## Optional debug check
 
 Select the small **i** control. Confirm the compact overlay reports state, x/y, supporting HWND, usable terrain count, bridge heartbeat age, and bridge status. Select **i** again before continuing normal use. The debug preference should survive restart in `data/settings.ini`.
